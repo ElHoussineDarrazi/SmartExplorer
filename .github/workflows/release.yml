@@ -25,11 +25,18 @@ jobs:
       - name: Strip binary
         run: strip target/release/smart_explorer
 
+      - name: Create macOS DMG
+        run: |
+          mkdir -p dmg_staging
+          cp target/release/smart_explorer dmg_staging/
+          ln -s /Applications dmg_staging/Applications
+          hdiutil create -volname "SmartExplorer" -srcfolder dmg_staging -ov -format UDZO -o SmartExplorer.dmg
+
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: smart-explorer-macos
-          path: target/release/smart_explorer
+          path: SmartExplorer.dmg
 
   build-linux:
     name: Build Linux (Ubuntu)
