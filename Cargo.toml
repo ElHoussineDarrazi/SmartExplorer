@@ -1,0 +1,69 @@
+[package]
+name = "smart_explorer"
+version = "0.1.0"
+edition = "2024"
+description = "Explorateur de fichiers multiplateforme (Windows, Linux, macOS) en Rust"
+license = "MIT"
+
+[dependencies]
+# Interface graphique (100% Rust, multiplateforme, sans dépendance système).
+eframe = "0.36"
+egui = "0.36"
+
+# Corbeille système (Corbeille Windows, Poubelle macOS/Linux).
+trash = "5"
+
+# Ouvrir un fichier/dossier avec l'application par défaut de l'OS.
+open = "5"
+
+# Répertoires standards (home, bureau, téléchargements…).
+dirs = "7"
+
+# Formatage des dates de modification.
+chrono = "0.4"
+
+# Décodage / redimensionnement des vignettes d'images (vue Miniatures) :
+# formats courants uniquement, sans les codecs lourds (avif, rayon…).
+image = { version = "0.25", default-features = false, features = [
+    "png",
+    "jpeg",
+    "webp",
+    "gif",
+    "tiff",
+    "bmp",
+    "ico",
+] }
+
+# --- macOS : icônes système réelles (NSWorkspace.iconForFile) ---
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = "0.3"
+objc2-app-kit = "0.3"
+# Aperçus PDF (vue Miniatures) : première page rendue par PDFKit, natif.
+objc2-pdf-kit = "0.3"
+
+# --- Connexions distantes (SSH/SFTP et FTP) ---
+# ssh2-rs : bindings Rust à libssh2 (SSH + SFTP, auth par mot de passe).
+# Nécessite libssh2 installé sur le système (brew install libssh2).
+ssh2 = "0.9"
+# ftp : client FTP pur Rust, synchrone.
+ftp = "3"
+
+# --- Stockage chiffré des identifiants ---
+# Chiffrement symétrique (XChaCha20-Poly1305) des mots de passe.
+chacha20poly1305 = "0.11"
+# Dérivation de clé à partir du mot de passe maître (Argon2id).
+argon2 = "0.5"
+# Génération de sel / nonce.
+rand = "0.8"
+# Sérialisation de la liste des serveurs distants.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Énumérations d'erreur typées.
+thiserror = "1"
+
+# Optimisations du profil release.
+[profile.release]
+opt-level = 2
+lto = true
+codegen-units = 1
