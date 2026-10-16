@@ -72,6 +72,7 @@ pub enum Dialog {
     Rename { path: PathBuf, name: String },
     ConfirmDelete { paths: Vec<PathBuf> },
     Properties { path: PathBuf },
+    SystemProperties,
     About,
 }
 

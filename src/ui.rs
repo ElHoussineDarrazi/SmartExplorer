@@ -7,6 +7,7 @@ use eframe::egui::{self, Color32, RichText, Vec2};
 use crate::app::{Action, Dialog, ExplorerApp, SortColumn, TabKind, ViewMode};
 use crate::fs;
 use crate::remote;
+use sysinfo::{DiskKind, Disks, System};
 
 /// Palette de couleurs façon Windows 11 (Explorateur, thème clair).
 mod palette {
@@ -90,6 +91,18 @@ fn ellipsize(ui: &egui::Ui, text: &str, max_width: f32, font: egui::FontId) -> S
         }
     }
     format!("{s}…")
+}
+
+/// Informations système collectées pour le popup « Propriétés de l'ordinateur ».
+struct SystemInfo {
+    os_name: String,
+    cpu_brand: String,
+    cpu_cores: String,
+    cpu_freq_mhz: u64,
+    ram_total: u64,
+    ram_available: u64,
+    ram_used: u64,
+    disks: Vec<(String, u64, u64, String)>,
 }
 
 /// Style « plat » local : boutons sans fond, surbrillance en pilule grise
@@ -630,12 +643,25 @@ fn tree_panel(app: &mut ExplorerApp, ui: &mut egui::Ui, ctx: &egui::Context) -> 
     ui.add_space(8.0);
     ui.separator();
     ui.add_space(6.0);
-    ui.label(
-        RichText::new("Ce PC")
-            .strong()
-            .size(13.0)
-            .color(palette::TEXT_DIM),
+
+    // Bouton « Ce PC » avec menu contextuel « Propriétés » (clic droit) :
+    // affiche les informations système (OS, CPU, GPU, RAM, stockage).
+    let ce_pc_resp = ui.add(
+        egui::Button::new(
+            RichText::new("Ce PC")
+                .strong()
+                .size(13.0)
+                .color(palette::TEXT_DIM),
+        )
+        .frame(false),
     );
+    ce_pc_resp.context_menu(|ui| {
+        ui.set_width(200.0);
+        if menu_item(ui, "ℹ️", "Propriétés", "", false, true) {
+            app.dialog = Dialog::SystemProperties;
+            ui.close();
+        }
+    });
     ui.add_space(4.0);
 
     // Racines (lecteurs / système) ou fichiers du serveur distant.
@@ -2145,6 +2171,144 @@ fn show_dialog(app: &mut ExplorerApp, ctx: &egui::Context) {
                 });
             if open && !close {
                 app.dialog = Dialog::Properties { path };
+            }
+        }
+
+        Dialog::SystemProperties => {
+            let mut open = true;
+            let mut close = false;
+
+            let sys_info = {
+                let mut sys = System::new_all();
+                sys.refresh_all();
+                let os_name = System::long_os_version()
+                    .unwrap_or_else(|| System::os_version().unwrap_or_default());
+                let cpus = sys.cpus();
+                let cpu_brand = cpus
+                    .first()
+                    .map(|c| c.brand().to_string())
+                    .unwrap_or_else(|| "—".to_string());
+                let cpu_cores = sys
+                    .physical_core_count()
+                    .map(|n| n.to_string())
+                    .unwrap_or_else(|| "—".to_string());
+                let cpu_freq_mhz = cpus.first().map(|c| c.frequency()).unwrap_or(0);
+                let ram_total = sys.total_memory();
+                let ram_available = sys.available_memory();
+                let ram_used = sys.used_memory();
+                let disks: Vec<(String, u64, u64, String)> = Disks::new_with_refreshed_list()
+                    .list()
+                    .iter()
+                    .map(|d| {
+                        let name = d.mount_point().to_string_lossy().to_string();
+                        let type_label = match d.kind() {
+                            DiskKind::HDD => "HDD".to_string(),
+                            DiskKind::SSD => "SSD".to_string(),
+                            DiskKind::Unknown(_) => "Inconnu".to_string(),
+                        };
+                        (name, d.total_space(), d.available_space(), type_label)
+                    })
+                    .collect();
+                SystemInfo {
+                    os_name,
+                    cpu_brand,
+                    cpu_cores,
+                    cpu_freq_mhz,
+                    ram_total,
+                    ram_available,
+                    ram_used,
+                    disks,
+                }
+            };
+
+            egui::Window::new("Propriétés de l'ordinateur")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .open(&mut open)
+                .show(ctx, |ui| {
+                    ui.set_width(520.0);
+                    ui.horizontal(|ui| {
+                        let os_emoji = match std::env::consts::OS {
+                            "macos" => "🍎",
+                            "linux" => "🐧",
+                            "windows" => "🪟",
+                            _ => "💻",
+                        };
+                        ui.label(RichText::new(os_emoji).size(32.0));
+                        ui.vertical(|ui| {
+                            ui.label(
+                                RichText::new("Propriétés de l'ordinateur")
+                                    .strong()
+                                    .size(20.0),
+                            );
+                            ui.label(RichText::new(&sys_info.os_name).color(palette::TEXT_DIM));
+                        });
+                    });
+                    ui.add_space(12.0);
+                    ui.separator();
+                    ui.add_space(12.0);
+
+                    egui::Grid::new("system_props_grid")
+                        .num_columns(2)
+                        .spacing([16.0, 8.0])
+                        .show(ui, |ui| {
+                            ui.label(RichText::new("Système d'exploitation :").strong());
+                            ui.label(&sys_info.os_name);
+                            ui.end_row();
+                            ui.label(RichText::new("Processeur :").strong());
+                            ui.label(&sys_info.cpu_brand);
+                            ui.end_row();
+                            ui.label(RichText::new("Cœurs physiques :").strong());
+                            ui.label(&sys_info.cpu_cores);
+                            ui.end_row();
+                            if sys_info.cpu_freq_mhz > 0 {
+                                ui.label(RichText::new("Fréquence :").strong());
+                                ui.label(format!("{} MHz", sys_info.cpu_freq_mhz));
+                                ui.end_row();
+                            }
+                            ui.label(RichText::new("Mémoire vive (RAM) :").strong());
+                            ui.label(format!(
+                                "{} / {} ({} disponible)",
+                                fs::format_size(sys_info.ram_used),
+                                fs::format_size(sys_info.ram_total),
+                                fs::format_size(sys_info.ram_available)
+                            ));
+                            ui.end_row();
+                            if sys_info.disks.is_empty() {
+                                ui.label(RichText::new("Disques :").strong());
+                                ui.label("Aucun disque détecté");
+                                ui.end_row();
+                            } else {
+                                ui.label(RichText::new("Disques :").strong());
+                                let storage_text: Vec<String> = sys_info
+                                    .disks
+                                    .iter()
+                                    .map(|(name, total, available, type_label)| {
+                                        format!(
+                                            "{} ({}) — {} / {}",
+                                            name,
+                                            type_label,
+                                            fs::format_size(*available),
+                                            fs::format_size(*total)
+                                        )
+                                    })
+                                    .collect();
+                                ui.label(storage_text.join("\n"));
+                                ui.end_row();
+                            }
+                        });
+
+                    ui.add_space(16.0);
+                    if ui
+                        .add_sized([88.0, 32.0], egui::Button::new("Fermer"))
+                        .clicked()
+                    {
+                        close = true;
+                    }
+                });
+            if open && !close {
+                app.dialog = Dialog::SystemProperties;
             }
         }
 

@@ -50,6 +50,9 @@ ssh2 = "0.9"
 # ftp : client FTP pur Rust, synchrone.
 ftp = "3"
 
+# Informations système (OS, CPU, GPU, RAM, stockage) pour la fenêtre Propriétés de l'ordinateur.
+sysinfo = { version = "0.33", features = ["system", "disk"] }
+
 # --- Stockage chiffré des identifiants ---
 # Chiffrement symétrique (XChaCha20-Poly1305) des mots de passe.
 chacha20poly1305 = "0.11"
