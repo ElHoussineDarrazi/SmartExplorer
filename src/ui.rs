@@ -113,6 +113,50 @@ fn lerp_color(a: Color32, b: Color32, t: f32) -> Color32 {
     )
 }
 
+#[allow(dead_code)]
+/// Parse une taille lisible (ex: "10 Mo", "500 Ko", "2.5 Go") en octets.
+fn parse_size(s: &str) -> Option<u64> {
+    let s = s.trim();
+    if s.is_empty() {
+        return Some(0);
+    }
+    let (num_str, unit) = match s.find(|c: char| c.is_alphabetic()) {
+        Some(idx) => (s[..idx].trim(), s[idx..].trim()),
+        None => (s, "o"),
+    };
+    let value: f64 = num_str.parse().ok()?;
+    let multiplier = match unit {
+        "o" | "O" => 1.0,
+        "ko" | "Ko" | "kO" | "KB" | "kb" => 1024.0,
+        "mo" | "Mo" | "mO" | "MB" | "mb" => 1024.0 * 1024.0,
+        "go" | "Go" | "gO" | "GB" | "gb" => 1024.0 * 1024.0 * 1024.0,
+        "to" | "To" | "tO" | "TB" | "tb" => 1024.0 * 1024.0 * 1024.0 * 1024.0,
+        _ => return None,
+    };
+    Some((value * multiplier) as u64)
+}
+
+/// Couleur selon la taille du fichier : vert (petit) → rouge (gros).
+fn file_color(entry: &fs::Entry, max_size: f64) -> Color32 {
+    if max_size <= 0.0 {
+        return Color32::from_rgb(0, 200, 0); // vert par défaut
+    }
+    let ratio = (entry.size as f64 / max_size).clamp(0.0, 1.0);
+    // Interpolation : vert (0, 255, 0) quand petit, rouge (255, 0, 0) quand gros
+    let r = (ratio * 255.0) as u8;
+    let g = ((1.0 - ratio) * 255.0) as u8;
+    Color32::from_rgb(r, g, 0)
+}
+
+/// Retourne true si la couleur est sombre (pour choisir la couleur du texte).
+fn is_color_dark(color: Color32) -> bool {
+    let r = color.r() as f32;
+    let g = color.g() as f32;
+    let b = color.b() as f32;
+    let luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    luminance < 128.0
+}
+
 /// Calcule la valeur d'animation (0.0 → 1.0) pour un élément survolé.
 /// `prev` est la valeur précédente, `hovered` l'état actuel, `dt` le delta-temps,
 /// `speed` la vitesse de transition (en unités par seconde).
@@ -282,6 +326,46 @@ fn command_bar(app: &mut ExplorerApp, ui: &mut egui::Ui) -> Action {
         }
         if icon_button(ui, "🗑️", "Supprimer (Suppr)", has_sel) {
             action = Action::Delete;
+        }
+
+        // --- Bouton carte des tailles de fichiers ---
+        let fsm_id = ui.id().with("file_size_map_button");
+        let fsm_rect = ui.available_rect_before_wrap();
+        let mouse_pos = ui.ctx().input(|i| i.pointer.hover_pos());
+        let fsm_hovered = mouse_pos.is_some_and(|p| fsm_rect.contains(p));
+        let fsm_anim = {
+            let prev = ui
+                .ctx()
+                .memory_mut(|m| m.data.get_temp::<f32>(fsm_id))
+                .unwrap_or(0.0);
+            let dt = ui.ctx().input(|i| i.predicted_dt.max(1.0 / 60.0));
+            let anim = hover_anim(prev, fsm_hovered, dt, 5.0);
+            ui.ctx().memory_mut(|m| m.data.insert_temp(fsm_id, anim));
+            anim
+        };
+        if fsm_anim > 0.001 || fsm_anim < 0.999 {
+            ui.ctx().request_repaint();
+        }
+        let fsm_bg = lerp_color(
+            Color32::TRANSPARENT,
+            palette::HOVER_NEUTRAL,
+            ease_out_cubic(fsm_anim),
+        );
+        ui.painter()
+            .rect_filled(fsm_rect, egui::CornerRadius::same(6), fsm_bg);
+
+        let fsm_resp = ui.add(
+            egui::Button::new(
+                RichText::new("📊 Taille des fichiers")
+                    .strong()
+                    .size(12.0)
+                    .color(palette::TEXT_DIM),
+            )
+            .frame(false),
+        );
+        if fsm_resp.clicked() {
+            // Filtre par défaut : 0 (tous les fichiers) - ajustez avec le champ ci-dessous
+            app.dialog = Dialog::FileSizeMap { min_size: 0 };
         }
 
         // --- Groupe de droite : Trier, Afficher, menu « … » ---
@@ -2386,6 +2470,348 @@ fn show_dialog(app: &mut ExplorerApp, ctx: &egui::Context) {
                 });
             if open && !close {
                 app.dialog = Dialog::SystemProperties;
+            }
+        }
+
+        Dialog::FileSizeMap { mut min_size } => {
+            let mut open = true;
+            let mut close = false;
+
+            // Scanner depuis la racine du système de fichiers en premier,
+            // puis le home, puis le dossier courant comme dernier recours.
+            let cwd = app.tab().cwd.clone();
+            let show_hidden = app.tab().show_hidden;
+
+            // 1. Racine du système de fichiers
+            let root = fs::get_roots()
+                .first()
+                .cloned()
+                .unwrap_or_else(|| PathBuf::from("/"));
+            let mut entries = fs::list_dir(&root, show_hidden).unwrap_or_default();
+            let mut scan_path = root.clone();
+
+            // 2. Home (fallback si la racine est illisible, ex. SIP sur macOS)
+            if entries.is_empty() {
+                if let Some(home) = fs::home_dir() {
+                    entries = fs::list_dir(&home, show_hidden).unwrap_or_default();
+                    scan_path = home;
+                }
+            }
+
+            // 3. Dossier courant (dernier recours)
+            if entries.is_empty() {
+                entries = fs::list_dir(&cwd, show_hidden).unwrap_or_default();
+                scan_path = cwd.clone();
+            }
+
+            // 4. Chemins système courants (sur macOS, /Users est souvent lisible même si / ne l'est pas)
+            if entries.is_empty() {
+                for candidate in ["/Users", "/Volumes", "/tmp"] {
+                    let p = PathBuf::from(candidate);
+                    if p.exists() {
+                        let e = fs::list_dir(&p, show_hidden).unwrap_or_default();
+                        if !e.is_empty() {
+                            entries = e;
+                            scan_path = p;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            let mut files: Vec<&fs::Entry> = entries
+                .iter()
+                .filter(|e| !e.is_dir && e.size >= min_size)
+                .collect();
+            files.sort_by_key(|a| std::cmp::Reverse(a.size));
+
+            let dir_count = entries.iter().filter(|e| e.is_dir).count();
+            let file_count = entries.len() - dir_count;
+
+            // ── Mode démo : si aucun fichier n'a été trouvé, on génère des
+            // entrées de test pour que le rendu des carrés soit visible.
+            let demo_mode = files.is_empty() && entries.is_empty();
+            let mut demo_entries: Vec<fs::Entry> = Vec::new();
+            if demo_mode {
+                demo_entries = vec![
+                    fs::Entry {
+                        path: PathBuf::from("demo/petite_photo.jpg"),
+                        name: "petite_photo.jpg".into(),
+                        is_dir: false,
+                        is_hidden: false,
+                        size: 50_000,
+                        modified: None,
+                        extension: "jpg".into(),
+                        is_symlink: false,
+                    },
+                    fs::Entry {
+                        path: PathBuf::from("demo/document.pdf"),
+                        name: "document.pdf".into(),
+                        is_dir: false,
+                        is_hidden: false,
+                        size: 2_000_000,
+                        modified: None,
+                        extension: "pdf".into(),
+                        is_symlink: false,
+                    },
+                    fs::Entry {
+                        path: PathBuf::from("demo/video.mp4"),
+                        name: "video.mp4".into(),
+                        is_dir: false,
+                        is_hidden: false,
+                        size: 150_000_000,
+                        modified: None,
+                        extension: "mp4".into(),
+                        is_symlink: false,
+                    },
+                    fs::Entry {
+                        path: PathBuf::from("demo/fichier_texte.txt"),
+                        name: "fichier_texte.txt".into(),
+                        is_dir: false,
+                        is_hidden: false,
+                        size: 1_200,
+                        modified: None,
+                        extension: "txt".into(),
+                        is_symlink: false,
+                    },
+                    fs::Entry {
+                        path: PathBuf::from("demo/archive.zip"),
+                        name: "archive.zip".into(),
+                        is_dir: false,
+                        is_hidden: false,
+                        size: 45_000_000,
+                        modified: None,
+                        extension: "zip".into(),
+                        is_symlink: false,
+                    },
+                    fs::Entry {
+                        path: PathBuf::from("demo/iso_image.iso"),
+                        name: "iso_image.iso".into(),
+                        is_dir: false,
+                        is_hidden: false,
+                        size: 700_000_000,
+                        modified: None,
+                        extension: "iso".into(),
+                        is_symlink: false,
+                    },
+                ];
+                scan_path = PathBuf::from("(démo)");
+            }
+
+            egui::Window::new("Carte des tailles de fichiers")
+                .collapsible(false)
+                .resizable(true)
+                .default_size([700.0, 500.0])
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .open(&mut open)
+                .show(ctx, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label("Taille minimum :");
+                        // Champ numérique (DragValue) pour saisir la taille en octets
+                        let mut min_size_f = min_size as f64;
+                        let resp = ui.add(
+                            egui::DragValue::new(&mut min_size_f)
+                                .speed(1.0)
+                                .suffix(" o"),
+                        );
+                        if resp.changed() && !demo_mode {
+                            min_size = min_size_f.max(0.0) as u64;
+                            files = entries
+                                .iter()
+                                .filter(|e| !e.is_dir && e.size >= min_size)
+                                .collect();
+                            files.sort_by_key(|a| std::cmp::Reverse(a.size));
+                        }
+                        ui.label(format!("({})", fs::format_size(min_size)));
+                        ui.separator();
+                        if ui.button("Tout afficher (0 o)").clicked() && !demo_mode {
+                            min_size = 0;
+                            files = entries
+                                .iter()
+                                .filter(|e| !e.is_dir && e.size >= min_size)
+                                .collect();
+                            files.sort_by_key(|a| std::cmp::Reverse(a.size));
+                        }
+                        ui.separator();
+                        let display_count = if demo_mode { demo_entries.len() } else { files.len() };
+                        ui.label(format!("{} fichier(s)", display_count));
+                        ui.separator();
+                        ui.label(format!("Dossier : {}", scan_path.display()));
+                        ui.separator();
+                        ui.label(format!(
+                            "{} entrée(s) ({} fichier(s), {} dossier(s)){}",
+                            entries.len(),
+                            file_count,
+                            dir_count,
+                            if demo_mode { " [démo]" } else { "" }
+                        ));
+                    });
+
+                    // Déterminer quels fichiers afficher (réels ou démo)
+                    let render_files: Vec<&fs::Entry> = if demo_mode {
+                        demo_entries.iter().collect()
+                    } else {
+                        files.clone()
+                    };
+
+                    // Afficher le message démo si applicable
+                    if demo_mode {
+                        ui.add_space(12.0);
+                        ui.label(
+                            RichText::new("🎮 Mode démo — aucun fichier réel n'a été trouvé.")
+                                .color(Color32::from_rgb(100, 150, 255))
+                                .italics(),
+                        );
+                        ui.add_space(4.0);
+                        ui.label(
+                            RichText::new(
+                                "Les carrés ci-dessous représentent des fichiers de test (petit=vert, gros=rouge).",
+                            )
+                            .size(10.0)
+                            .color(palette::TEXT_DIM),
+                        );
+                    } else if entries.is_empty() {
+                        ui.add_space(40.0);
+                        ui.label(
+                            RichText::new("⚠ Impossible de lire ce dossier.")
+                                .color(Color32::from_rgb(255, 80, 80))
+                                .strong(),
+                        );
+                        ui.add_space(10.0);
+                        ui.label(
+                            RichText::new(format!("Chemin essayé : {}", scan_path.display()))
+                                .size(11.0)
+                                .color(palette::TEXT_DIM),
+                        );
+                        ui.add_space(10.0);
+                        ui.label(
+                            RichText::new(
+                                "Aucun dossier lisible n'a été trouvé. Essayez de lancer l'application depuis un dossier contenant des fichiers.",
+                            )
+                            .size(10.0)
+                            .color(palette::TEXT_DIM)
+                            .italics(),
+                        );
+                        ui.add_space(40.0);
+                    } else if files.is_empty() {
+                        ui.add_space(40.0);
+                        ui.label(
+                            RichText::new("ℹ Aucun fichier à afficher.")
+                                .color(palette::TEXT_DIM)
+                                .italics(),
+                        );
+                        ui.add_space(10.0);
+                        ui.label(
+                            RichText::new(format!(
+                                "Le dossier contient {} dossier(s) mais aucun fichier (ou tous les fichiers sont exclus par le filtre de taille).",
+                                dir_count
+                            ))
+                            .size(11.0)
+                            .color(palette::TEXT_DIM),
+                        );
+                        ui.add_space(10.0);
+                        if ui.button("Réduire le filtre de taille à 0").clicked() {
+                            min_size = 0;
+                            files = entries
+                                .iter()
+                                .filter(|e| !e.is_dir && e.size >= min_size)
+                                .collect();
+                            files.sort_by_key(|a| std::cmp::Reverse(a.size));
+                        }
+                        ui.add_space(40.0);
+                    }
+
+                    // Dessiner les carrés (mode démo ou fichiers réels)
+                    if !render_files.is_empty() {
+                        ui.add_space(12.0);
+
+                        egui::ScrollArea::vertical().show(ui, |ui| {
+                            let available_width = ui.available_width();
+                            let mut x = 0.0;
+                            let mut y = 0.0;
+                            let mut row_height = 0.0;
+                            const PADDING: f32 = 6.0;
+
+                            let max_size = render_files
+                                .first()
+                                .map(|f| f.size)
+                                .unwrap_or(1) as f64;
+                            let max_size = if max_size <= 0.0 { 1.0 } else { max_size };
+                            const MAX_SIDE: f32 = 140.0;
+                            const MIN_SIDE: f32 = 30.0;
+
+                            for entry in &render_files {
+                                let ratio = (entry.size as f64 / max_size).sqrt() as f32;
+                                let side = MIN_SIDE + ratio * (MAX_SIDE - MIN_SIDE);
+
+                                if x + side > available_width && x > 0.0 {
+                                    x = 0.0;
+                                    y += row_height + PADDING;
+                                    row_height = 0.0;
+                                }
+
+                                let rect = egui::Rect::from_min_max(
+                                    egui::pos2(x, y),
+                                    egui::pos2(x + side, y + side),
+                                );
+
+                                let color = file_color(entry, max_size);
+                                ui.painter().rect_filled(rect, 4.0, color);
+                                ui.painter().rect_stroke(
+                                    rect,
+                                    4.0,
+                                    egui::Stroke::new(1.0, Color32::WHITE),
+                                    egui::StrokeKind::Outside,
+                                );
+
+                                let text_color = if is_color_dark(color) {
+                                    Color32::WHITE
+                                } else {
+                                    Color32::BLACK
+                                };
+
+                                let name = ellipsize(
+                                    ui,
+                                    &entry.name,
+                                    (side - 8.0).max(0.0),
+                                    egui::FontId::proportional(10.0),
+                                );
+                                ui.painter().text(
+                                    rect.center(),
+                                    egui::Align2::CENTER_CENTER,
+                                    name,
+                                    egui::FontId::proportional(10.0),
+                                    text_color,
+                                );
+
+                                let size_text = fs::format_size(entry.size);
+                                ui.painter().text(
+                                    egui::pos2(rect.center().x, rect.bottom() + 8.0),
+                                    egui::Align2::CENTER_TOP,
+                                    size_text,
+                                    egui::FontId::proportional(10.0),
+                                    palette::TEXT_DIM,
+                                );
+
+                                x += side + PADDING;
+                                row_height = row_height.max(side + 24.0);
+                            }
+
+                            ui.add_space(y + row_height + 20.0);
+                        });
+                    }
+
+                    ui.add_space(16.0);
+                    if ui
+                        .add_sized([88.0, 32.0], egui::Button::new("Fermer"))
+                        .clicked()
+                    {
+                        close = true;
+                    }
+                });
+
+            if open && !close {
+                app.dialog = Dialog::FileSizeMap { min_size };
             }
         }
 

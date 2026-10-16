@@ -67,12 +67,27 @@ pub enum Action {
 /// Boîte de dialogue modale en cours.
 pub enum Dialog {
     None,
-    NewFolder { name: String },
-    NewFile { name: String },
-    Rename { path: PathBuf, name: String },
-    ConfirmDelete { paths: Vec<PathBuf> },
-    Properties { path: PathBuf },
+    NewFolder {
+        name: String,
+    },
+    NewFile {
+        name: String,
+    },
+    Rename {
+        path: PathBuf,
+        name: String,
+    },
+    ConfirmDelete {
+        paths: Vec<PathBuf>,
+    },
+    Properties {
+        path: PathBuf,
+    },
     SystemProperties,
+    /// Carte des tailles de fichiers (carrés proportionnels à la taille).
+    FileSizeMap {
+        min_size: u64,
+    },
     About,
 }
 
