@@ -44,8 +44,9 @@ objc2-pdf-kit = "0.3"
 
 # --- Connexions distantes (SSH/SFTP et FTP) ---
 # ssh2-rs : bindings Rust à libssh2 (SSH + SFTP, auth par mot de passe).
-# Nécessite libssh2 installé sur le système (brew install libssh2).
+# Nécessite libssh2 installé sur le système (brew install libssh2, apt install libssh2-1-dev).
 ssh2 = "0.9"
+
 # ftp : client FTP pur Rust, synchrone.
 ftp = "3"
 
@@ -67,3 +68,9 @@ thiserror = "1"
 opt-level = 2
 lto = true
 codegen-units = 1
+
+# --- Windows : ssh2 compilé depuis les sources (pas de libssh2 système requis) ---
+[target.'cfg(target_os = "windows")'.dependencies.ssh2]
+version = "0.9"
+default-features = false
+features = ["vendored-openssl"]
