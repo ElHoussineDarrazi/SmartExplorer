@@ -93,9 +93,47 @@ fn ellipsize(ui: &egui::Ui, text: &str, max_width: f32, font: egui::FontId) -> S
     format!("{s}…")
 }
 
+/// --- Animations réactives style macOS ---------------------------------------
+
+/// Fonction d'easing « ease-out cubic » (démarrage rapide, fin douce).
+/// `t` doit être compris entre 0.0 et 1.0.
+fn ease_out_cubic(t: f32) -> f32 {
+    let t = t.clamp(0.0, 1.0);
+    1.0 - (1.0 - t).powi(3)
+}
+
+/// Interpole linéairement entre deux couleurs.
+fn lerp_color(a: Color32, b: Color32, t: f32) -> Color32 {
+    let t = t.clamp(0.0, 1.0);
+    Color32::from_rgba_unmultiplied(
+        (a.r() as f32 + (b.r() as f32 - a.r() as f32) * t) as u8,
+        (a.g() as f32 + (b.g() as f32 - a.g() as f32) * t) as u8,
+        (a.b() as f32 + (b.b() as f32 - a.b() as f32) * t) as u8,
+        (a.a() as f32 + (b.a() as f32 - a.a() as f32) * t) as u8,
+    )
+}
+
+/// Calcule la valeur d'animation (0.0 → 1.0) pour un élément survolé.
+/// `prev` est la valeur précédente, `hovered` l'état actuel, `dt` le delta-temps,
+/// `speed` la vitesse de transition (en unités par seconde).
+fn hover_anim(prev: f32, hovered: bool, dt: f32, speed: f32) -> f32 {
+    let target = if hovered { 1.0 } else { 0.0 };
+    let diff = target - prev;
+    let step = speed * dt;
+    if diff.abs() <= step {
+        target
+    } else {
+        prev + diff.signum() * step
+    }
+}
+
+/// Style « plat » local : boutons sans fond, surbrillance en pilule grise
+
 /// Informations système collectées pour le popup « Propriétés de l'ordinateur ».
 struct SystemInfo {
     os_name: String,
+    os_version: String,
+    os_code_name: String,
     cpu_brand: String,
     cpu_cores: String,
     cpu_freq_mhz: u64,
@@ -644,8 +682,33 @@ fn tree_panel(app: &mut ExplorerApp, ui: &mut egui::Ui, ctx: &egui::Context) -> 
     ui.separator();
     ui.add_space(6.0);
 
-    // Bouton « Ce PC » avec menu contextuel « Propriétés » (clic droit) :
-    // affiche les informations système (OS, CPU, GPU, RAM, stockage).
+    // Bouton « Ce PC » avec survol animé (style macOS) et menu contextuel.
+    let ce_pc_id = ui.id().with("ce_pc_button");
+    let ce_pc_rect = ui.available_rect_before_wrap();
+    let mouse_pos = ui.ctx().input(|i| i.pointer.hover_pos());
+    let ce_pc_hovered = mouse_pos.is_some_and(|p| ce_pc_rect.contains(p));
+    let ce_pc_anim = {
+        let prev = ctx
+            .memory_mut(|m| m.data.get_temp::<f32>(ce_pc_id))
+            .unwrap_or(0.0);
+        let dt = ui.ctx().input(|i| i.predicted_dt.max(1.0 / 60.0));
+        let anim = hover_anim(prev, ce_pc_hovered, dt, 5.0);
+        ctx.memory_mut(|m| m.data.insert_temp(ce_pc_id, anim));
+        anim
+    };
+    if ce_pc_anim > 0.001 || ce_pc_anim < 0.999 {
+        ctx.request_repaint();
+    }
+
+    // Fond arrondi qui s'illumine au survol.
+    let ce_pc_bg = lerp_color(
+        Color32::TRANSPARENT,
+        palette::HOVER_NEUTRAL,
+        ease_out_cubic(ce_pc_anim),
+    );
+    ui.painter()
+        .rect_filled(ce_pc_rect, egui::CornerRadius::same(6), ce_pc_bg);
+
     let ce_pc_resp = ui.add(
         egui::Button::new(
             RichText::new("Ce PC")
@@ -2181,8 +2244,13 @@ fn show_dialog(app: &mut ExplorerApp, ctx: &egui::Context) {
             let sys_info = {
                 let mut sys = System::new_all();
                 sys.refresh_all();
-                let os_name = System::long_os_version()
+                let long_os = System::long_os_version()
                     .unwrap_or_else(|| System::os_version().unwrap_or_default());
+                // Sépare nom, version et « code name » (ex: "macOS 15.1.1 Sequoia").
+                let parts: Vec<&str> = long_os.split_whitespace().collect();
+                let os_name = parts.first().copied().unwrap_or("").to_string();
+                let os_version = parts.get(1).copied().unwrap_or("").to_string();
+                let os_code_name = parts.get(2..).map(|r| r.join(" ")).unwrap_or_default();
                 let cpus = sys.cpus();
                 let cpu_brand = cpus
                     .first()
@@ -2211,6 +2279,8 @@ fn show_dialog(app: &mut ExplorerApp, ctx: &egui::Context) {
                     .collect();
                 SystemInfo {
                     os_name,
+                    os_version,
+                    os_code_name,
                     cpu_brand,
                     cpu_cores,
                     cpu_freq_mhz,
@@ -2254,7 +2324,14 @@ fn show_dialog(app: &mut ExplorerApp, ctx: &egui::Context) {
                         .spacing([16.0, 8.0])
                         .show(ui, |ui| {
                             ui.label(RichText::new("Système d'exploitation :").strong());
-                            ui.label(&sys_info.os_name);
+                            let mut os_label = sys_info.os_name.clone();
+                            if !sys_info.os_version.is_empty() {
+                                os_label.push_str(&format!(" {}", sys_info.os_version));
+                            }
+                            if !sys_info.os_code_name.is_empty() {
+                                os_label.push_str(&format!(" — {}", sys_info.os_code_name));
+                            }
+                            ui.label(os_label);
                             ui.end_row();
                             ui.label(RichText::new("Processeur :").strong());
                             ui.label(&sys_info.cpu_brand);
