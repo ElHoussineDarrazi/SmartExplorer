@@ -51,13 +51,16 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libssh2-1-dev pkg-config libssl-dev cmake
+          sudo apt-get install -y build-essential libssh2-1-dev pkg-config libssl-dev cmake upx
 
       - name: Build release
         run: cargo build --release
 
       - name: Strip binary
         run: strip target/release/smart_explorer
+
+      - name: Compress binary with UPX
+        run: upx --best target/release/smart_explorer
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
@@ -77,6 +80,12 @@ jobs:
 
       - name: Build release
         run: cargo build --release
+
+      - name: Install UPX
+        run: choco install upx -y
+
+      - name: Compress binary with UPX
+        run: upx --best target/release/smart_explorer.exe
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
