@@ -77,12 +77,39 @@ mkdir -p "$APP_MACOS" "$APP_RESOURCES"
 cp "$TARGET_BIN" "$APP_MACOS/$APP_BIN"
 chmod +x "$APP_MACOS/$APP_BIN"
 
-# Icône : si une .icns est fournie, on l'utilise, sinon on crée une icône par défaut.
+# Icône : si une .icns est fournie, on l'utilise ; sinon on convertit AppIcon.png en .icns.
 ICON_DEST="$APP_RESOURCES/AppIcon.icns"
+ICON_PNG="${ICON_PNG:-assets/icons/AppIcon.png}"
 if [[ -n "${ICON_ICNS:-}" && -f "$ICON_ICNS" ]]; then
   cp "$ICON_ICNS" "$ICON_DEST"
+  echo "    Icône (.icns fournie) : $ICON_ICNS"
+elif [[ -f "$ICON_PNG" ]]; then
+  echo "    Conversion de l'icône PNG → .icns : $ICON_PNG"
+  ICONSET="$(mktemp -d)/AppIcon.iconset"
+  mkdir -p "$ICONSET"
+  # (nom, taille en px) — sips permet l'upscaling pour les tailles > source.
+  declare -a SIZES=(
+    "16x16 16"
+    "16x16@2x 32"
+    "32x32 32"
+    "32x32@2x 64"
+    "128x128 128"
+    "128x128@2x 256"
+    "256x256 256"
+    "256x256@2x 512"
+    "512x512 512"
+    "512x512@2x 1024"
+  )
+  for entry in "${SIZES[@]}"; do
+    name="${entry%% *}"
+    px="${entry##* }"
+    sips -z "$px" "$px" "$ICON_PNG" --out "$ICONSET/icon_${name}.png" >/dev/null
+  done
+  iconutil -c icns "$ICONSET" -o "$ICON_DEST"
+  rm -rf "$(dirname "$ICONSET")"
+  echo "    Icône installée : $ICON_DEST"
 else
-  echo "    (aucune icône .icns fournie — icône par défaut)"
+  echo "    (aucune icône trouvée — icône par défaut du système)"
 fi
 
 # 3. Info.plist
