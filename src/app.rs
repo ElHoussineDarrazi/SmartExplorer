@@ -85,6 +85,7 @@ pub enum Dialog {
     },
     SystemProperties,
     /// Carte des tailles de fichiers (carrés proportionnels à la taille).
+    #[allow(dead_code)]
     FileSizeMap {
         min_size: u64,
     },
