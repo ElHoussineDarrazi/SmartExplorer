@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::mpsc;
 use std::time::Instant;
 
+use crate::animation;
 use crate::credentials;
 use crate::fs;
 use crate::remote;
@@ -62,6 +63,15 @@ pub enum Action {
     CopyPath(PathBuf),
     ToggleHidden,
     RenameSel,
+}
+
+/// Direction d'une navigation, utilisée pour animer le glissement du contenu.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum NavDir {
+    In,     // entrer dans un dossier (contenu glisse vers la gauche)
+    Out,    // remonter d'un niveau (contenu glisse vers la droite)
+    Back,   // retour dans l'historique (glisse vers la droite)
+    Forward, // avancer dans l'historique (glisse vers la gauche)
 }
 
 /// Boîte de dialogue modale en cours.
@@ -291,6 +301,13 @@ pub struct ExplorerApp {
     pub remote_dialog: RemoteDialogState,
     /// État éphémère du déverrouillage du mot de passe maître.
     pub unlock_dialog: UnlockDialogState,
+
+    /// Éléments supprimés en cours de disparition (animation de sortie macOS).
+    pub vanishing: Vec<(PathBuf, Instant)>,
+    /// Éléments ajoutés en cours d'apparition (animation d'entrée macOS).
+    pub added: Vec<(PathBuf, Instant)>,
+    /// Direction et instant de la dernière navigation (animation du contenu).
+    pub nav_dir: Option<(NavDir, Instant)>,
 }
 
 impl ExplorerApp {
@@ -340,6 +357,9 @@ impl ExplorerApp {
             remote_error: None,
             remote_dialog: RemoteDialogState::default(),
             unlock_dialog: UnlockDialogState::default(),
+            vanishing: Vec::new(),
+            added: Vec::new(),
+            nav_dir: None,
         };
         app.expand_path();
         app.refresh();
@@ -421,11 +441,34 @@ impl ExplorerApp {
         self.tab_mut().highlight = Some((path, Instant::now()));
     }
 
+    /// Retire les entrées d'animation dont la durée est dépassée.
+    /// À appeler à chaque frame (depuis `ui::show`).
+    pub fn tick_animations(&mut self) {
+        let now = Instant::now();
+        self.vanishing
+            .retain(|(_, t)| now.duration_since(t.clone()).as_secs_f32() < animation::DURATION);
+        self.added
+            .retain(|(_, t)| now.duration_since(t.clone()).as_secs_f32() < animation::DURATION);
+        // On oublie la direction de navigation une fois l'animation finie.
+        if let Some((_, t)) = self.nav_dir {
+            if now.duration_since(t.clone()).as_secs_f32() >= animation::DURATION {
+                self.nav_dir = None;
+            }
+        }
+    }
+
     /// Navigue vers un dossier (ajoute à l'historique).
     pub fn navigate(&mut self, path: PathBuf) {
         let path = path.canonicalize().unwrap_or(path);
         if !path.is_dir() {
             return;
+        }
+        // Ne remplace pas une direction de navigation déjà en cours d'animation.
+        let already_animating = self
+            .nav_dir
+            .map_or(false, |(_, t)| Instant::now().duration_since(t.clone()).as_secs_f32() < animation::DURATION);
+        if !already_animating {
+            self.nav_dir = Some((NavDir::In, Instant::now()));
         }
         let tab = self.tab_mut();
         // Coupe l'historique "avant" si on avait navigué en arrière.
@@ -440,6 +483,7 @@ impl ExplorerApp {
 
     /// Navigation "retour".
     pub fn go_back(&mut self) {
+        self.nav_dir = Some((NavDir::Back, Instant::now()));
         if self.tab().history_index > 0 {
             let tab = self.tab_mut();
             tab.history_index -= 1;
@@ -450,6 +494,7 @@ impl ExplorerApp {
 
     /// Navigation "avancer".
     pub fn go_forward(&mut self) {
+        self.nav_dir = Some((NavDir::Forward, Instant::now()));
         let tab = self.tab();
         if tab.history_index + 1 < tab.history.len() {
             let tab = self.tab_mut();
@@ -463,6 +508,7 @@ impl ExplorerApp {
     pub fn go_up(&mut self) {
         if let Some(parent) = self.tab().cwd.parent() {
             let parent = parent.to_path_buf();
+            self.nav_dir = Some((NavDir::Out, Instant::now()));
             self.navigate(parent);
         }
     }
@@ -934,6 +980,7 @@ impl ExplorerApp {
             false
         } else {
             self.refresh();
+            self.added.push((path.clone(), Instant::now()));
             self.set_highlight(path);
             self.notify("📁", format!("Dossier « {name} » créé"));
             true
@@ -955,6 +1002,7 @@ impl ExplorerApp {
             false
         } else {
             self.refresh();
+            self.added.push((path.clone(), Instant::now()));
             self.set_highlight(path);
             self.notify("📄", format!("Fichier « {name} » créé"));
             true
@@ -971,6 +1019,9 @@ impl ExplorerApp {
                     errors.push(format!("{} : {e}", p.display()));
                 }
             }
+        }
+        for p in paths {
+            self.vanishing.push((p.clone(), Instant::now()));
         }
         self.tab_mut().selected.clear();
         self.refresh();
@@ -1043,6 +1094,7 @@ impl ExplorerApp {
         }
         self.refresh();
         if let Some(p) = last_created {
+            self.added.push((p.clone(), Instant::now()));
             self.set_highlight(p);
         }
         if !errors.is_empty() {

@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use eframe::egui::{self, Color32, RichText, Vec2};
 
 use crate::app::{Action, Dialog, ExplorerApp, SortColumn, TabKind, ViewMode};
+use crate::animation;
 use crate::fs;
 use crate::remote;
 use sysinfo::{DiskKind, Disks, System};
@@ -2900,6 +2901,7 @@ fn tab_bar(app: &mut ExplorerApp, ui: &mut egui::Ui) {
 pub fn show(app: &mut ExplorerApp, ctx: &egui::Context, ui: &mut egui::Ui) {
     // Style global : thème clair garanti, popups arrondis façon Windows 11.
     ensure_style(ctx);
+    app.tick_animations();
 
     // Traitement des résultats d'opérations distantes asynchrones
     // (connexion, listage, lecture) terminés sur un worker thread.
@@ -3020,6 +3022,12 @@ pub fn show(app: &mut ExplorerApp, ctx: &egui::Context, ui: &mut egui::Ui) {
     if app.remote_dialog.open {
         show_remote_connect_dialog(app, ctx);
     }
+    // Fond sombre animé derrière les dialogs modaux (style macOS).
+    let dialog_open = !matches!(app.dialog, Dialog::None)
+        || app.unlock_dialog.open
+        || app.remote_dialog.open;
+    let _overlay_alpha = animation::dialog_overlay(ctx, dialog_open);
+
     show_dialog(app, ctx);
 
     // --- Notification animée (toast) et nettoyage du surlignage expiré ---

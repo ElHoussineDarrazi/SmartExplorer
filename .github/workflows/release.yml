@@ -19,24 +19,17 @@ jobs:
       - name: Install libssh2 (required by ssh2 crate)
         run: brew install libssh2
 
-      - name: Build release
-        run: cargo build --release
+      - name: Ensure packaging script is executable
+        run: chmod +x scripts/package_macos.sh
 
-      - name: Strip binary
-        run: strip target/release/smart_explorer
-
-      - name: Create macOS DMG
-        run: |
-          mkdir -p dmg_staging
-          cp target/release/smart_explorer dmg_staging/
-          ln -s /Applications dmg_staging/Applications
-          hdiutil create -volname "SmartExplorer" -srcfolder dmg_staging -ov -format UDZO -o SmartExplorer.dmg
+      - name: Build release and package macOS (app bundle + DMG)
+        run: ./scripts/package_macos.sh
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: smart-explorer-macos
-          path: SmartExplorer.dmg
+          path: dist/SmartExplorer-macos.dmg
 
   build-linux:
     name: Build Linux (Ubuntu)
@@ -110,7 +103,7 @@ jobs:
 
       - name: Rename artifacts for release
         run: |
-          mv dist/smart-explorer-macos/SmartExplorer.dmg dist/SmartExplorer-macos.dmg
+          mv dist/smart-explorer-macos/SmartExplorer-macos.dmg dist/SmartExplorer-macos.dmg
           mv dist/smart-explorer-linux/smart_explorer dist/SmartExplorer-linux
           mv dist/smart-explorer-windows/smart_explorer.exe dist/SmartExplorer-windows.exe
 
