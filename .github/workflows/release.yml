@@ -13,7 +13,11 @@ permissions:
 
 jobs:
   # ------------------------------------------------------------------
-  # macOS : app bundle signée + DMG
+  # macOS : app bundle + DMG
+  # NOTE : ni signée avec un Developer ID ni notariée par Apple →
+  # Gatekeeper bloquera le premier lancement (cf. README, section
+  # « Installation macOS »). La signature officielle nécessiterait un
+  # compte Apple Developer payant.
   # ------------------------------------------------------------------
   build-macos:
     name: Build macOS (DMG)
