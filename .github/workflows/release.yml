@@ -60,7 +60,19 @@ jobs:
             dpkg-dev imagemagick desktop-file-utils
 
       - name: Build release
-        run: cargo build --release
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo build --release 2>&1 | tee /tmp/build.log || {
+            # Expose l'erreur dans les annotations publiques du run.
+            tail -n 8 /tmp/build.log | sed 's/^/  /' > /tmp/err.txt
+            echo "### ❌ cargo build --release a échoué" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"; cat /tmp/build.log | tail -n 60 >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
+            while IFS= read -r line; do
+              echo "::error title=cargo build (Linux)::${line:0:240}"
+            done < /tmp/err.txt
+            exit 1
+          }
 
       - name: Strip binary
         run: strip target/release/smart_explorer
@@ -90,7 +102,17 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build release
-        run: cargo build --release
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo build --release 2>&1 | tee /tmp/build.log || {
+            echo "### ❌ cargo build --release a échoué" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"; tail -n 60 /tmp/build.log >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -n 8 /tmp/build.log | while IFS= read -r line; do
+              echo "::error title=cargo build (Windows)::${line:0:240}"
+            done
+            exit 1
+          }
 
       # NOTE : pas de strip sur MSVC — les symboles vivent déjà dans le .pdb.
       # NSIS 3.x et ImageMagick sont préinstallés sur le runner windows-latest.
