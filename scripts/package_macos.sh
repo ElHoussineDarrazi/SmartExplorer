@@ -147,6 +147,18 @@ cat > "$APP_CONTENTS/Info.plist" <<PLIST
 </plist>
 PLIST
 
+# 3bis. Signature du bundle (adhoc si aucune identité fournie).
+# Sans cette étape, macOS peut ignorer l'icône du Dock (et sur Apple
+# Silicon, le binaire n'est pas exécutable sans signature).
+echo "[3bis/5] Signature du bundle…"
+if [[ -n "${CODESIGN_ID:-}" ]]; then
+  codesign --force --deep --options runtime --sign "$CODESIGN_ID" "$APP_BUNDLE"
+else
+  codesign --force --deep --sign - "$APP_BUNDLE"
+fi
+codesign --verify --strict "$APP_BUNDLE"
+echo "    Signature OK : $APP_BUNDLE"
+
 # 4. Nettoyage + staging pour le DMG
 echo "[4/5] Préparation du staging DMG…"
 rm -rf "$STAGING" "$DMG_NAME"

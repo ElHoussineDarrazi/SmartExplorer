@@ -11,5 +11,6 @@
 
 # Build artifacts
 dist/
+dist_tmp/
 SmartExplorer.app/
 dmg_staging/
