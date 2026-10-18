@@ -113,6 +113,11 @@ jobs:
 
       - name: Build release
         shell: bash
+        env:
+          # openssl-src (ssh2 vendored) doit utiliser Strawberry Perl — le perl
+          # de Git Bash manque des modules requis (Locale::Maketext::Simple…) et
+          # fait échouer `perl ./Configure` (exit 2).
+          OPENSSL_SRC_PERL: C:/Strawberry/perl/bin/perl.exe
         run: |
           set -o pipefail
           cargo build --release 2>&1 | tee /tmp/build.log || {
