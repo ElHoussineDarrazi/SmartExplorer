@@ -34,14 +34,6 @@ image = { version = "0.25", default-features = false, features = [
     "ico",
 ] }
 
-# --- macOS : icônes système réelles (NSWorkspace.iconForFile) ---
-[target.'cfg(target_os = "macos")'.dependencies]
-objc2 = "0.6"
-objc2-foundation = "0.3"
-objc2-app-kit = "0.3"
-# Aperçus PDF (vue Miniatures) : première page rendue par PDFKit, natif.
-objc2-pdf-kit = "0.3"
-
 # --- Connexions distantes (SSH/SFTP et FTP) ---
 # ssh2-rs : bindings Rust à libssh2 (SSH + SFTP, auth par mot de passe).
 # Nécessite libssh2 installé sur le système (brew install libssh2, apt install libssh2-1-dev).
@@ -66,14 +58,25 @@ serde_json = "1"
 # Énumérations d'erreur typées.
 thiserror = "1"
 
-# Optimisations du profil release.
-[profile.release]
-opt-level = 2
-lto = true
-codegen-units = 1
+# --- macOS : icônes système réelles (NSWorkspace.iconForFile) ---
+# ATTENTION : cette section doit rester APRÈS toutes les dépendances
+# transversales — en TOML, une section court jusqu'au prochain header, donc
+# toute dépendance placée ici deviendrait exclusive à macOS.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = "0.3"
+objc2-app-kit = "0.3"
+# Aperçus PDF (vue Miniatures) : première page rendue par PDFKit, natif.
+objc2-pdf-kit = "0.3"
 
 # --- Windows : ssh2 compilé depuis les sources (pas de libssh2 système requis) ---
 [target.'cfg(target_os = "windows")'.dependencies.ssh2]
 version = "0.9"
 default-features = false
 features = ["vendored-openssl"]
+
+# Optimisations du profil release.
+[profile.release]
+opt-level = 2
+lto = true
+codegen-units = 1
