@@ -137,6 +137,12 @@ jobs:
         shell: pwsh
         run: magick assets/icons/AppIcon.png -background none -alpha remove -resize 256x256 dist_tmp\app.ico
 
+      # NSIS est répertorié sur l'image windows mais absent du PATH et des
+      # chemins standards : on l'installe explicitement via Chocolatey.
+      - name: Installer NSIS (makensis)
+        shell: pwsh
+        run: choco install nsis -y --no-progress
+
       - name: Package Windows (NSIS setup.exe)
         shell: pwsh
         run: |
