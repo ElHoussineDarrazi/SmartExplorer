@@ -1,0 +1,39 @@
+name: ✨ Demande de fonctionnalité
+description: Proposez une nouvelle idée ou une amélioration
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci pour votre idée ! Décrivez la fonctionnalité et le besoin qu'elle comblerait.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problème / besoin
+      description: Quel problème cette fonctionnalité résout-elle ? Quelle frustration actuelle ?
+      placeholder: Je voudrais pouvoir… car actuellement…
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution envisagée
+      description: Décrivez comment vous aimeriez que cela fonctionne.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives envisagées
+      description: Avez-vous pensé à d'autres solutions ou contournements ?
+      placeholder: Facultatif
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexte supplémentaire
+      description: Captures d'écran, références à d'autres applications, ou tout détail utile.
+      placeholder: Facultatif

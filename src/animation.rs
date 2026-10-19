@@ -27,7 +27,7 @@ pub fn bool_val(ctx: &egui::Context, id: impl Into<egui::Id>, target: bool) -> f
 
 /// Opacité [0.0, 1.0] d'un élément qui apparaît ou disparaît.
 pub fn fade(ctx: &egui::Context, id: impl Into<egui::Id>, visible: bool) -> f32 {
-    bool_val(ctx, id, visible) as f32
+    bool_val(ctx, id, visible)
 }
 
 /// Décalage horizontal de sortie (élément qui glisse vers la droite avant
@@ -41,7 +41,7 @@ pub fn slide_out_x(
     leaving: bool,
     max_offset: f32,
 ) -> f32 {
-    let t = bool_val(ctx, id, leaving) as f32;
+    let t = bool_val(ctx, id, leaving);
     // Ease-out : démarre vite, puis se stabilise.
     let eased = 1.0 - (1.0 - t).powi(3);
     max_offset * eased
@@ -58,7 +58,7 @@ pub fn slide_in_y(
     entering: bool,
     max_offset: f32,
 ) -> f32 {
-    let t = bool_val(ctx, id, entering) as f32;
+    let t = bool_val(ctx, id, entering);
     let eased = 1.0 - (1.0 - t).powi(3);
     max_offset * (1.0 - eased)
 }
@@ -74,12 +74,10 @@ pub fn with_alpha(color: egui::Color32, alpha: f32) -> egui::Color32 {
 pub fn dialog_overlay(ctx: &egui::Context, visible: bool) -> f32 {
     let alpha = fade(ctx, egui::Id::new("smart_explorer/dialog_overlay"), visible);
     if alpha > 0.0 {
-        let screen_rect = ctx
-            .input(|i| i.raw.screen_rect)
-            .unwrap_or(egui::Rect {
-                min: Default::default(),
-                max: Default::default(),
-            });
+        let screen_rect = ctx.input(|i| i.raw.screen_rect).unwrap_or(egui::Rect {
+            min: Default::default(),
+            max: Default::default(),
+        });
         let painter = ctx.layer_painter(egui::LayerId::background());
         painter.rect_filled(
             screen_rect,

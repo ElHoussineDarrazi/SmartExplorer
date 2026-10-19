@@ -1,0 +1,72 @@
+name: 🐞 Rapport de bug
+description: Signalez un comportement inattendu ou un plantage
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de signaler un bug ! Remplissez le formulaire ci-dessous pour nous aider à le reproduire.
+        **Pour une faille de sécurité**, n'ouvrez PAS d'issue publique : suivez plutôt [SECURITY.md](https://github.com/ElHoussineDarrazi/SmartExplorer/security/advisories/new).
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Version de SmartExplorer (onglet « À propos » ou tag de la Release).
+      placeholder: "0.3.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Système d'exploitation
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows 10/11
+        - Linux (Debian/Ubuntu)
+        - Linux (autre)
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Que s'est-il passé ?
+      description: Décrivez le comportement observé, et le comportement attendu.
+      placeholder: |
+        Quand je…, l'application…
+        Je m'attendais à…
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes de reproduction
+      description: Les étapes exactes pour reproduire le problème.
+      placeholder: |
+        1. Ouvrir l'application
+        2. Aller dans…
+        3. Cliquer sur…
+        4. Le bug apparaît
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Messages d'erreur / logs
+      description: Collez tout message d'erreur ou trace pertinente. Facultatif mais très utile.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Vérifications
+      options:
+        - label: J'ai recherché les issues existantes et ce bug n'est pas déjà signalé.
+          required: true
+        - label: Ce bug n'est pas une faille de sécurité (sinon, voir SECURITY.md).
+          required: true

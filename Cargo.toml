@@ -2,8 +2,14 @@
 name = "smart_explorer"
 version = "0.3.1"
 edition = "2024"
+rust-version = "1.85"
 description = "Explorateur de fichiers multiplateforme (Windows, Linux, macOS) en Rust"
 license = "MIT"
+repository = "https://github.com/ElHoussineDarrazi/SmartExplorer"
+homepage = "https://github.com/ElHoussineDarrazi/SmartExplorer"
+readme = "README.md"
+keywords = ["file-manager", "explorer", "gui", "egui", "cross-platform"]
+categories = ["gui", "filesystem", "command-line-utilities"]
 
 [dependencies]
 # Interface graphique (100% Rust, multiplateforme, sans dépendance système).

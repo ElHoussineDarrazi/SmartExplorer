@@ -4,8 +4,8 @@
 // On évite l'ouverture d'une console noire sur Windows en mode release.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod app;
 mod animation;
+mod app;
 mod credentials;
 mod fs;
 mod icons;

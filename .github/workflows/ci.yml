@@ -1,0 +1,105 @@
+name: CI
+
+# Déclenché à chaque push sur main et sur chaque Pull Request.
+# Vérifie la qualité du code (fmt, clippy, tests) et que le projet compile
+# sur les 3 plateformes — sans produire d'installateur (cf. release.yml).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Lecture seule : ce workflow ne modifie rien.
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  # ------------------------------------------------------------------
+  # Qualité du code : formatage, lints stricts, tests unitaires (Linux).
+  # ------------------------------------------------------------------
+  quality:
+    name: Qualité (fmt + clippy + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (with rustfmt + clippy)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install system dependencies (libssh2)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssh2-1-dev pkg-config libssl-dev
+
+      - name: Cache cargo registry + build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-quality-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy (warnings = erreurs)
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: cargo test
+        run: cargo test --all-targets
+
+  # ------------------------------------------------------------------
+  # Compilation sur les 3 plateformes (sans packaging).
+  # ------------------------------------------------------------------
+  build:
+    name: Build (${{ matrix.os }})
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: macOS
+            deps: brew install libssh2
+          - os: ubuntu-latest
+            name: Linux
+            deps: sudo apt-get update && sudo apt-get install -y build-essential libssh2-1-dev pkg-config libssl-dev
+          - os: windows-latest
+            name: Windows
+            deps: choco install strawberryperl -y --no-progress
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: ${{ matrix.deps }}
+
+      # Windows : openssl-src (vendored) a besoin d'un Perl complet.
+      - name: Prioriser Strawberry Perl (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: echo "C:/Strawberry/perl/bin" >> "$GITHUB_PATH"
+
+      - name: Cache cargo registry + build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build (debug, rapide — compile sans empaqueter)
+        run: cargo build --all-targets

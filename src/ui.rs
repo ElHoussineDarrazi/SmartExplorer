@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use eframe::egui::{self, Color32, RichText, Vec2};
 
-use crate::app::{Action, Dialog, ExplorerApp, SortColumn, TabKind, ViewMode};
 use crate::animation;
+use crate::app::{Action, Dialog, ExplorerApp, SortColumn, TabKind, ViewMode};
 use crate::fs;
 use crate::remote;
 use sysinfo::{DiskKind, Disks, System};
@@ -94,7 +94,7 @@ fn ellipsize(ui: &egui::Ui, text: &str, max_width: f32, font: egui::FontId) -> S
     format!("{s}…")
 }
 
-/// --- Animations réactives style macOS ---------------------------------------
+// --- Animations réactives style macOS ---------------------------------------
 
 /// Fonction d'easing « ease-out cubic » (démarrage rapide, fin douce).
 /// `t` doit être compris entre 0.0 et 1.0.
@@ -174,7 +174,7 @@ fn hover_anim(prev: f32, hovered: bool, dt: f32, speed: f32) -> f32 {
     }
 }
 
-/// Style « plat » local : boutons sans fond, surbrillance en pilule grise
+// Style « plat » local : boutons sans fond, surbrillance en pilule grise
 
 /// Informations système collectées pour le popup « Propriétés de l'ordinateur ».
 struct SystemInfo {
@@ -3023,9 +3023,8 @@ pub fn show(app: &mut ExplorerApp, ctx: &egui::Context, ui: &mut egui::Ui) {
         show_remote_connect_dialog(app, ctx);
     }
     // Fond sombre animé derrière les dialogs modaux (style macOS).
-    let dialog_open = !matches!(app.dialog, Dialog::None)
-        || app.unlock_dialog.open
-        || app.remote_dialog.open;
+    let dialog_open =
+        !matches!(app.dialog, Dialog::None) || app.unlock_dialog.open || app.remote_dialog.open;
     let _overlay_alpha = animation::dialog_overlay(ctx, dialog_open);
 
     show_dialog(app, ctx);

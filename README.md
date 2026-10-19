@@ -1,10 +1,22 @@
 # SmartExplorer
 
+[![CI](https://github.com/ElHoussineDarrazi/SmartExplorer/actions/workflows/ci.yml/badge.svg)](https://github.com/ElHoussineDarrazi/SmartExplorer/actions/workflows/ci.yml)
+[![Build and Release](https://github.com/ElHoussineDarrazi/SmartExplorer/actions/workflows/release.yml/badge.svg)](https://github.com/ElHoussineDarrazi/SmartExplorer/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://rust-lang.org)
+
 Explorateur de fichiers multiplateforme (Windows, Linux, macOS) écrit en Rust, avec une interface 100 % Rust basée sur [egui/eframe](https://github.com/emilk/egui) — aucune dépendance système pour l'UI.
 
 **Fonctionnalités** : navigation par onglets, vignettes d'images, vue Miniatures (avec aperçus PDF sur macOS), connexions distantes SSH/SFTP et FTP, stockage des identifiants chiffré (XChaCha20-Poly1305 + Argon2id), fenêtre Propriétés de l'ordinateur (OS, CPU, GPU, RAM, stockage), corbeille système native (Corbeille Windows / Poubelle macOS/Linux).
 
-Licence : MIT.
+## Sommaire
+
+- [Installation](#installation)
+- [Compilation depuis les sources](#compilation-depuis-les-sources)
+- [Intégration continue & releases](#intégration-continue--releases)
+- [Contribuer](#contribuer)
+- [Sécurité des identifiants](#sécurité-des-identifiants)
+- [Licence](#licence)
 
 ---
 
@@ -106,3 +118,44 @@ git push origin main vX.Y.Z
 ## Sécurité des identifiants
 
 Les mots de passe des serveurs SSH/FTP ne sont **jamais stockés en clair** : ils sont chiffrés localement avec XChaCha20-Poly1305, la clé étant dérivée d'un mot de passe maître via Argon2id (sel aléatoire par enregistrement). Rien n'est envoyé sur le réseau — tout reste sur votre machine.
+
+Pour signaler une faille de sécurité, suivez [SECURITY.md](SECURITY.md) (signalement privé, pas d'issue publique).
+
+---
+
+## Contribuer
+
+Les contributions sont les bienvenues — que ce soit du code, de la documentation, des traductions ou des idées ! 🙌
+
+**Nouveau ici ?** Voici le parcours typique pour un premier apport :
+
+1. **Fourchez** le dépôt (bouton *Fork* en haut à droite).
+2. Clonez **votre** fourche et créez une branche :
+
+   ```bash
+   git clone https://github.com/<votre-pseudo>/SmartExplorer.git
+   cd SmartExplorer
+   git checkout -b feature/ma-fonctionnalite
+   ```
+
+3. Modifiez le code, puis vérifiez la qualité (les mêmes contrôles que la CI) :
+
+   ```bash
+   cargo fmt --all -- --check
+   cargo clippy --all-targets -- -D warnings
+   cargo test
+   ```
+
+4. Poussez et ouvrez une **Pull Request**.
+
+Le détail (style de code, convention de commits, tests) est dans **[CONTRIBUTING.md](CONTRIBUTING.md)**. En participant, vous acceptez le **[Code de conduite](CODE_OF_CONDUCT.md)**.
+
+Chaque Pull Request est automatiquement validée par la [CI](.github/workflows/ci.yml) : formatage, lints stricts, tests et compilation sur les 3 plateformes.
+
+**Idées d'amélioration** : consultez les issues étiquetées [`good first issue`](https://github.com/ElHoussineDarrazi/SmartExplorer/labels/good%20first%20issue) pour débuter en douceur.
+
+---
+
+## Licence
+
+Distribué sous la licence **[MIT](LICENSE)** — réutilisez, modifiez, redistribuez librement, y compris dans des projets commerciaux.

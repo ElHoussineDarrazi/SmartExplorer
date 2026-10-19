@@ -68,9 +68,9 @@ pub enum Action {
 /// Direction d'une navigation, utilisée pour animer le glissement du contenu.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum NavDir {
-    In,     // entrer dans un dossier (contenu glisse vers la gauche)
-    Out,    // remonter d'un niveau (contenu glisse vers la droite)
-    Back,   // retour dans l'historique (glisse vers la droite)
+    In,      // entrer dans un dossier (contenu glisse vers la gauche)
+    Out,     // remonter d'un niveau (contenu glisse vers la droite)
+    Back,    // retour dans l'historique (glisse vers la droite)
     Forward, // avancer dans l'historique (glisse vers la gauche)
 }
 
@@ -446,12 +446,12 @@ impl ExplorerApp {
     pub fn tick_animations(&mut self) {
         let now = Instant::now();
         self.vanishing
-            .retain(|(_, t)| now.duration_since(t.clone()).as_secs_f32() < animation::DURATION);
+            .retain(|(_, t)| now.duration_since(*t).as_secs_f32() < animation::DURATION);
         self.added
-            .retain(|(_, t)| now.duration_since(t.clone()).as_secs_f32() < animation::DURATION);
+            .retain(|(_, t)| now.duration_since(*t).as_secs_f32() < animation::DURATION);
         // On oublie la direction de navigation une fois l'animation finie.
         if let Some((_, t)) = self.nav_dir {
-            if now.duration_since(t.clone()).as_secs_f32() >= animation::DURATION {
+            if now.duration_since(t).as_secs_f32() >= animation::DURATION {
                 self.nav_dir = None;
             }
         }
@@ -464,9 +464,9 @@ impl ExplorerApp {
             return;
         }
         // Ne remplace pas une direction de navigation déjà en cours d'animation.
-        let already_animating = self
-            .nav_dir
-            .map_or(false, |(_, t)| Instant::now().duration_since(t.clone()).as_secs_f32() < animation::DURATION);
+        let already_animating = self.nav_dir.is_some_and(|(_, t)| {
+            Instant::now().duration_since(t).as_secs_f32() < animation::DURATION
+        });
         if !already_animating {
             self.nav_dir = Some((NavDir::In, Instant::now()));
         }
