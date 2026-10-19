@@ -1,26 +1,26 @@
-# Politique de sécurité
+# Security Policy
 
-## Périmètre
+## Scope
 
-SmartExplorer stocke localement des identifiants de serveurs distants (SSH/SFTP et FTP), chiffrés avec XChaCha20-Poly1305 sous une clé dérivée d'un mot de passe maître (Argon2id). Toute faille touchant ce chiffrement, l'exécution de commandes, ou l'accès aux fichiers locaux est **sévérité haute**.
+SmartExplorer stores remote server credentials (SSH/SFTP and FTP) locally, encrypted with XChaCha20-Poly1305 under a key derived from a master password (Argon2id). Any vulnerability affecting this encryption, command execution, or local file access is **high severity**.
 
-## Signaler une vulnérabilité
+## Reporting a vulnerability
 
-**Ne publiez pas de faille connue dans une issue publique.** Utilisez plutôt la fonctionnalité privée GitHub : [Security Advisory → Report a vulnerability](https://github.com/ElHoussineDarrazi/SmartExplorer/security/advisories/new).
+**Do not disclose a known flaw in a public issue.** Instead, use GitHub's private feature: [Security Advisory → Report a vulnerability](https://github.com/ElHoussineDarrazi/SmartExplorer/security/advisories/new).
 
-Vous pouvez aussi contacter directement le mainteneur via GitHub (onglet profil). Merci de fournir :
+You may also contact the maintainer directly via GitHub (profile tab). Please provide:
 
-- Une description claire de la faille et son impact
-- Les étapes de reproduction (ou un proof-of-concept)
-- La version concernée (`SmartExplorer → à propos`, ou le tag de la Release)
+- A clear description of the flaw and its impact
+- Steps to reproduce (or a proof of concept)
+- The affected version (`SmartExplorer → About`, or the Release tag)
 
-## Engagement du mainteneur
+## Maintainer commitment
 
-- Accusé de réception sous **72 h**
-- Évaluation et mise à jour régulière de la situation
-- Crédit du découvreur dans le bulletin de correction (sauf objection)
-- Pas de poursuite pour les chercheurs de bonne foi qui signalent de façon responsable
+- Acknowledgment within **72 hours**
+- Assessment and regular status updates
+- Credit to the discoverer in the advisory (unless declined)
+- No legal action against good-faith researchers reporting responsibly
 
-## Corrections
+## Fixes
 
-Les correctifs sont publiés via une nouvelle Release (tag `v*`). Pour la dernière version, voir la page [Releases](https://github.com/ElHoussineDarrazi/SmartExplorer/releases).
+Fixes are published through a new Release (tag `v*`). For the latest version, see the [Releases](https://github.com/ElHoussineDarrazi/SmartExplorer/releases) page.

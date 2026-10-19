@@ -1,39 +1,39 @@
-name: ✨ Demande de fonctionnalité
-description: Proposez une nouvelle idée ou une amélioration
+name: ✨ Feature request
+description: Suggest a new idea or an improvement
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Merci pour votre idée ! Décrivez la fonctionnalité et le besoin qu'elle comblerait.
+        Thanks for your idea! Describe the feature and the need it would address.
 
   - type: textarea
     id: problem
     attributes:
-      label: Problème / besoin
-      description: Quel problème cette fonctionnalité résout-elle ? Quelle frustration actuelle ?
-      placeholder: Je voudrais pouvoir… car actuellement…
+      label: Problem / need
+      description: What problem does this feature solve? What current frustration?
+      placeholder: I would like to be able to… because currently…
     validations:
       required: true
 
   - type: textarea
     id: solution
     attributes:
-      label: Solution envisagée
-      description: Décrivez comment vous aimeriez que cela fonctionne.
+      label: Proposed solution
+      description: Describe how you would like it to work.
     validations:
       required: true
 
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives envisagées
-      description: Avez-vous pensé à d'autres solutions ou contournements ?
-      placeholder: Facultatif
+      label: Alternatives considered
+      description: Have you considered other solutions or workarounds?
+      placeholder: Optional
 
   - type: textarea
     id: context
     attributes:
-      label: Contexte supplémentaire
-      description: Captures d'écran, références à d'autres applications, ou tout détail utile.
-      placeholder: Facultatif
+      label: Additional context
+      description: Screenshots, references to other applications, or any useful detail.
+      placeholder: Optional

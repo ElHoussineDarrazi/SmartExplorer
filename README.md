@@ -5,73 +5,73 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://rust-lang.org)
 
-Explorateur de fichiers multiplateforme (Windows, Linux, macOS) écrit en Rust, avec une interface 100 % Rust basée sur [egui/eframe](https://github.com/emilk/egui) — aucune dépendance système pour l'UI.
+A cross-platform file manager (Windows, Linux, macOS) written in Rust, with a 100 % Rust UI built on [egui/eframe](https://github.com/emilk/egui) — no system dependencies for the UI.
 
-**Fonctionnalités** : navigation par onglets, vignettes d'images, vue Miniatures (avec aperçus PDF sur macOS), connexions distantes SSH/SFTP et FTP, stockage des identifiants chiffré (XChaCha20-Poly1305 + Argon2id), fenêtre Propriétés de l'ordinateur (OS, CPU, GPU, RAM, stockage), corbeille système native (Corbeille Windows / Poubelle macOS/Linux).
+**Features**: tabbed navigation, image thumbnails, Grid/Icons view (with PDF previews on macOS), SSH/SFTP and FTP remote connections, encrypted credential storage (XChaCha20-Poly1305 + Argon2id), Computer Properties window (OS, CPU, GPU, RAM, storage), native system trash (Windows Recycle Bin / macOS & Linux Trash).
 
-## Sommaire
+## Table of contents
 
 - [Installation](#installation)
-- [Compilation depuis les sources](#compilation-depuis-les-sources)
-- [Intégration continue & releases](#intégration-continue--releases)
-- [Contribuer](#contribuer)
-- [Sécurité des identifiants](#sécurité-des-identifiants)
-- [Licence](#licence)
+- [Building from source](#building-from-source)
+- [Continuous integration & releases](#continuous-integration--releases)
+- [Contributing](#contributing)
+- [Credential security](#credential-security)
+- [License](#license)
 
 ---
 
 ## Installation
 
-Téléchargez l'installateur de votre plateforme depuis la page [Releases](https://github.com/ElHoussineDarrazi/SmartExplorer/releases) :
+Download the installer for your platform from the [Releases](https://github.com/ElHoussineDarrazi/SmartExplorer/releases) page :
 
-| Plateforme | Fichier |
+| Platform | File |
 |---|---|
 | 🍎 macOS | `SmartExplorer-macos.dmg` |
 | 🪟 Windows | `SmartExplorer-windows-setup.exe` |
 | 🐧 Linux (Debian/Ubuntu) | `smartexplorer_<version>_amd64.deb` |
 
-### 🍎 macOS — contournement de Gatekeeper
+### 🍎 macOS — Gatekeeper workaround
 
-L'application n'est **pas signée avec un Apple Developer ID ni notariée** (compte payant requis). Au premier lancement, macOS affiche donc :
+The app is **not signed with an Apple Developer ID nor notarized** (a paid account is required). On first launch, macOS therefore shows:
 
-> « Élement « SmartExplorer » non ouvert — Apple n'a pas pu confirmer que … »
+> “SmartExplorer” Not Opened — Apple could not verify that …
 
-C'est **normal** : le code est sûr, macOS se contente de ne pas pouvoir vérifier son origine. Pour lancer l'application, choisissez **une** de ces méthodes :
+This is **expected**: the code is safe, macOS simply cannot verify its origin. To launch the app, choose **one** of these methods:
 
-**Méthode 1 — Clic droit (la plus simple)**
-1. Dans le Finder, ouvrez `/Applications`.
-2. **Clic droit** sur **SmartExplorer** → **Ouvrir**.
-3. Confirmez **Ouvrir** dans la fenêtre qui apparaît (celle-ci, contrairement au blocage initial, propose bien « Ouvrir »).
+**Method 1 — Right-click (simplest)**
+1. In Finder, open `/Applications`.
+2. **Right-click** **SmartExplorer** → **Open**.
+3. Confirm **Open** in the dialog that appears (unlike the initial block, this one does offer “Open”).
 
-**Méthode 2 — Réglages Système**
-1. Essayez d'ouvrir SmartExplorer une première fois (échoue, c'est normal).
-2. Ouvrez **Réglages Système → Confidentialité et sécurité**.
-3. Tout en bas, cliquez sur **« Ouvrir quand même »** à côté de SmartExplorer.
+**Method 2 — System Settings**
+1. Try opening SmartExplorer once (it fails, which is expected).
+2. Open **System Settings → Privacy & Security**.
+3. At the bottom, click **“Open Anyway”** next to SmartExplorer.
 
-**Méthode 3 — Terminal (une fois pour toutes)**
+**Method 3 — Terminal (one-time)**
 ```bash
 xattr -dr com.apple.quarantine /Applications/SmartExplorer.app
 ```
-L'application s'ouvrira ensuite normalement, comme toute app native.
+The app will then launch normally, like any native app.
 
-> Ces réglages ne sont nécessaires qu'**au premier lancement** ; une fois contourné, SmartExplorer démarre directement.
+> These settings are only needed on the **first launch**; once bypassed, SmartExplorer starts directly.
 
 ### 🪟 Windows
 
-Exécutez `SmartExplorer-windows-setup.exe` et suivez l'assistant. Si SmartScreen s'affiche (binaire non signé), cliquez sur **Informations complémentaires** puis **Exécuter quand même**.
+Run `SmartExplorer-windows-setup.exe` and follow the wizard. If SmartScreen appears (unsigned binary), click **More info** then **Run anyway**.
 
 ### 🐧 Linux
 
 ```bash
 sudo apt install ./smartexplorer_<version>_amd64.deb
 ```
-Puis lancez **SmartExplorer** depuis votre menu d'applications, ou `smart-explorer` en terminal.
+Then launch **SmartExplorer** from your applications menu, or `smart_explorer` in a terminal.
 
 ---
 
-## Compilation depuis les sources
+## Building from source
 
-Prérequis : [Rust](https://rustup.rs) (outil `cargo`).
+Prerequisites: [Rust](https://rustup.rs) (the `cargo` tool).
 
 ```bash
 git clone https://github.com/ElHoussineDarrazi/SmartExplorer.git
@@ -79,66 +79,66 @@ cd SmartExplorer
 cargo build --release
 ```
 
-### Dépendances système par plateforme
+### System dependencies per platform
 
-- **Linux** : `libssh2-1-dev` (+ `pkg-config`) —
+- **Linux**: `libssh2-1-dev` (+ `pkg-config`) —
   `sudo apt install libssh2-1-dev pkg-config`
-- **macOS** : `brew install libssh2`
-- **Windows** : aucune — `ssh2` est compilé avec OpenSSL vendored (`openssl-src`), ce qui impose un Perl complet (Strawberry Perl) si vous reproduisez le build manuellement.
+- **macOS**: `brew install libssh2`
+- **Windows**: none — `ssh2` is built with vendored OpenSSL (`openssl-src`), which requires a full Perl (Strawberry Perl) if you reproduce the build manually.
 
-Le binaire release se trouve dans `target/release/` :
+The release binary is located in `target/release/`:
 
-| Plateforme | Binaire |
+| Platform | Binary |
 |---|---|
-| macOS | `smart_explorer` (ou `SmartExplorer.app` via `installer/macos/package.sh`) |
+| macOS | `smart_explorer` (or `SmartExplorer.app` via `installer/macos/package.sh`) |
 | Linux | `smart_explorer` |
 | Windows | `smart_explorer.exe` |
 
-> Note : `scripts/package_macos.sh` génère l'icône `.icns` à partir de `assets/icons/AppIcon.png` (nécessite `sips`, fourni par macOS).
+> Note: `scripts/package_macos.sh` generates the `.icns` icon from `assets/icons/AppIcon.png` (requires `sips`, provided by macOS).
 
 ---
 
-## Intégration continue & releases
+## Continuous integration & releases
 
-Chaque **tag** poussé (`v*`) déclenche le workflow [`.github/workflows/release.yml`](.github/workflows/release.yml), qui compile l'application sur les trois plateformes et publie automatiquement les installateurs (`.dmg`, `.deb`, `setup.exe`) sur la Release GitHub associée.
+Every pushed **tag** (`v*`) triggers the [`.github/workflows/release.yml`](.github/workflows/release.yml) workflow, which builds the app on all three platforms and automatically publishes the installers (`.dmg`, `.deb`, `setup.exe`) to the corresponding GitHub Release.
 
-Pour couper une release :
+To cut a release:
 
 ```bash
-# 1. Mets à jour `version` dans Cargo.toml, puis :
+# 1. Update `version` in Cargo.toml, then:
 git commit -am "release: vX.Y.Z"
 
-# 2. Crée le tag et pousse-le (la CI publie les installateurs) :
+# 2. Create the tag and push it (CI publishes the installers):
 git tag -fa vX.Y.Z -m "SmartExplorer vX.Y.Z"
 git push origin main vX.Y.Z
 ```
 
 ---
 
-## Sécurité des identifiants
+## Credential security
 
-Les mots de passe des serveurs SSH/FTP ne sont **jamais stockés en clair** : ils sont chiffrés localement avec XChaCha20-Poly1305, la clé étant dérivée d'un mot de passe maître via Argon2id (sel aléatoire par enregistrement). Rien n'est envoyé sur le réseau — tout reste sur votre machine.
+SSH/FTP server passwords are **never stored in plaintext**: they are encrypted locally with XChaCha20-Poly1305, the key being derived from a master password via Argon2id (random salt per entry). Nothing is sent over the network — everything stays on your machine.
 
-Pour signaler une faille de sécurité, suivez [SECURITY.md](SECURITY.md) (signalement privé, pas d'issue publique).
+To report a vulnerability, follow [SECURITY.md](SECURITY.md) (private report, no public issue).
 
 ---
 
-## Contribuer
+## Contributing
 
-Les contributions sont les bienvenues — que ce soit du code, de la documentation, des traductions ou des idées ! 🙌
+Contributions are welcome — code, documentation, translations, or ideas! 🙌
 
-**Nouveau ici ?** Voici le parcours typique pour un premier apport :
+**New here?** Here is the typical path for a first contribution:
 
-1. **Fourchez** le dépôt (bouton *Fork* en haut à droite).
-2. Clonez **votre** fourche et créez une branche :
+1. **Fork** the repo (the *Fork* button, top right).
+2. Clone **your** fork and create a branch:
 
    ```bash
-   git clone https://github.com/<votre-pseudo>/SmartExplorer.git
+   git clone https://github.com/<your-username>/SmartExplorer.git
    cd SmartExplorer
-   git checkout -b feature/ma-fonctionnalite
+   git checkout -b feature/my-feature
    ```
 
-3. Modifiez le code, puis vérifiez la qualité (les mêmes contrôles que la CI) :
+3. Edit the code, then check quality (the same checks as CI):
 
    ```bash
    cargo fmt --all -- --check
@@ -146,16 +146,16 @@ Les contributions sont les bienvenues — que ce soit du code, de la documentati
    cargo test
    ```
 
-4. Poussez et ouvrez une **Pull Request**.
+4. Push and open a **Pull Request**.
 
-Le détail (style de code, convention de commits, tests) est dans **[CONTRIBUTING.md](CONTRIBUTING.md)**. En participant, vous acceptez le **[Code de conduite](CODE_OF_CONDUCT.md)**.
+The details (code style, commit convention, tests) are in **[CONTRIBUTING.md](CONTRIBUTING.md)**. By participating, you agree to the **[Code of Conduct](CODE_OF_CONDUCT.md)**.
 
-Chaque Pull Request est automatiquement validée par la [CI](.github/workflows/ci.yml) : formatage, lints stricts, tests et compilation sur les 3 plateformes.
+Every Pull Request is automatically validated by [CI](.github/workflows/ci.yml): formatting, strict lints, tests, and a build on all 3 platforms.
 
-**Idées d'amélioration** : consultez les issues étiquetées [`good first issue`](https://github.com/ElHoussineDarrazi/SmartExplorer/labels/good%20first%20issue) pour débuter en douceur.
+**Ideas to improve**: check the issues labeled [`good first issue`](https://github.com/ElHoussineDarrazi/SmartExplorer/labels/good%20first%20issue) to get started gently.
 
 ---
 
-## Licence
+## License
 
-Distribué sous la licence **[MIT](LICENSE)** — réutilisez, modifiez, redistribuez librement, y compris dans des projets commerciaux.
+Distributed under the **[MIT](LICENSE)** license — reuse, modify, and redistribute freely, including in commercial projects.

@@ -1,77 +1,77 @@
-# Contribuer à SmartExplorer
+# Contributing to SmartExplorer
 
-Merci de votre intérêt ! Ce projet est un explorateur de fichiers multiplateforme écrit en Rust, et toute aide est bienvenue. Ce document explique comment bien contribuer.
+Thank you for your interest! This project is a cross-platform file manager written in Rust, and any help is welcome. This document explains how to contribute properly.
 
-## Table des matières
+## Table of contents
 
-- [Code de conduite](#code-de-conduite)
-- [Démarrer](#démarrer)
-- [Convention de branches et de commits](#convention-de-branches-et-de-commits)
-- [Soumettre un changement](#soumettre-un-changement)
-- [Style de code](#style-de-code)
-- [Tester](#tester)
-- [Ajouter une fonctionnalité](#ajouter-une-fonctionnalité)
+- [Code of Conduct](#code-of-conduct)
+- [Getting started](#getting-started)
+- [Branch & commit conventions](#branch--commit-conventions)
+- [Submitting a change](#submitting-a-change)
+- [Code style](#code-style)
+- [Testing](#testing)
+- [Adding a feature](#adding-a-feature)
 
-## Code de conduite
+## Code of Conduct
 
-Ce projet suit le [Code de conduite](CODE_OF_CONDUCT.md). En participant, vous vous engagez à le respecter.
+This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to abide by it.
 
-## Démarrer
+## Getting started
 
-1. **Fourche** le dépôt (*fork*) et clonez votre fourche :
+1. **Fork** the repository and clone your fork:
 
    ```bash
-   git clone https://github.com/<votre-pseudo>/SmartExplorer.git
+   git clone https://github.com/<your-username>/SmartExplorer.git
    cd SmartExplorer
    git remote add upstream https://github.com/ElHoussineDarrazi/SmartExplorer.git
    ```
 
-2. **Installez Rust** via [rustup](https://rustup.rs) (édition 2024 → Rust **1.85+**).
+2. **Install Rust** via [rustup](https://rustup.rs) (edition 2024 → Rust **1.85+**).
 
-3. **Dépendances système** par plateforme (nécessaires pour compiler `ssh2`) :
+3. **System dependencies** per platform (required to build `ssh2`):
 
-   - Linux : `sudo apt install libssh2-1-dev pkg-config`
-   - macOS : `brew install libssh2`
-   - Windows : aucune (OpenSSL compilé en vendored)
+   - Linux: `sudo apt install libssh2-1-dev pkg-config`
+   - macOS: `brew install libssh2`
+   - Windows: none (OpenSSL is vendored)
 
-4. **Vérifiez que tout compile** :
+4. **Verify everything builds**:
 
    ```bash
    cargo build
    cargo test
    ```
 
-## Convention de branches et de-commits
+## Branch & commit conventions
 
-- Base : travaillez toujours sur une branche créée depuis `main` :
-  `git checkout -b feature/ma-fonctionnalite` ou `fix/mon-correction`.
-- Commits : message en **anglais ou français**, préfixé par un type
-  (conforme [Conventional Commits](https://www.conventionalcommits.org/)) :
+- Base: always work on a branch created from `main`:
+  `git checkout -b feature/my-feature` or `fix/my-fix`.
+- Commits: message in **English or French**, prefixed with a type
+  (following [Conventional Commits](https://www.conventionalcommits.org/)):
 
-  | Préfixe | Usage |
+  | Prefix | Usage |
   |---|---|
-  | `feat:` | nouvelle fonctionnalité |
-  | `fix:` | correction de bug |
+  | `feat:` | new feature |
+  | `fix:` | bug fix |
   | `docs:` | documentation |
-  | `style:` | formatage, sans changement de sens |
-  | `refactor:` | refactorisation sans changement de comportement |
-  | `test:` | ajout/correction de tests |
-  | `chore:` | outillage, dépendances, CI |
+  | `style:` | formatting, no behavior change |
+  | `refactor:` | refactoring without behavior change |
+  | `test:` | adding/fixing tests |
+  | `chore:` | tooling, dependencies, CI |
 
-  Exemples : `feat(ui): vue Miniatures`, `fix(ssh): reconnexion après perte réseau`.
+  Examples: `feat(ui): icons view`, `fix(ssh): reconnect after network loss`.
 
-## Soumettre un changement
+## Submitting a change
 
-1. **Sync** avec l'amont avant de commencer :
+1. **Sync** with upstream before starting:
 
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
-2. **Committez** par pas logiques, message clair.
+2. **Commit** in logical steps, with clear messages.
 
-3. **Vérifiez la qualité** (voir [Style de code](#style-de-code) et [Tester](#tester)) :
+3. **Check quality** (see [Code style](#code-style) and [Testing](#testing)):
 
    ```bash
    cargo fmt --all -- --check
@@ -79,48 +79,48 @@ Ce projet suit le [Code de conduite](CODE_OF_CONDUCT.md). En participant, vous v
    cargo test
    ```
 
-4. **Ouvrez une Pull Request** vers `main` du dépôt amont :
-   - Titre explicite, préfixé par le type (`feat:`, `fix:`…)
-   - Description : **quoi** et **pourquoi** ; si corrections un bug, **comment reproduire**
-   - Référencez l'issue liée (`Fixes #123`) si pertinent
-   - Une fonctionnalité = une PR (évitez les PRs « fourre-tout »)
+4. **Open a Pull Request** against the upstream `main`:
+   - Explicit title, prefixed by the type (`feat:`, `fix:`…)
+   - Description: **what** and **why**; if fixing a bug, **how to reproduce**
+   - Reference the related issue (`Fixes #123`) if relevant
+   - One feature = one PR (avoid “grab-bag” PRs)
 
-5. La **CI** (fmt, clippy, build 3 OS, tests) s'exécute automatiquement sur la PR.
-   Tous les checks doivent passer avant la revue.
+5. **CI** (fmt, clippy, build on 3 OS, tests) runs automatically on the PR.
+   All checks must pass before review.
 
-## Style de code
+## Code style
 
-- **`cargo fmt`** : le formatage officiel Rust est la référence (pas de style maison).
-- **`cargo clippy -D warnings`** : aucun avertissement toléré. Lisez les suggestions de Clippy.
-- **Documentation** : chaque module, fonction et struct publique porte une doc-comment (`///`).
-  Vérifiez avec `cargo doc --no-deps --open`.
-- **Commentaires en français** pour coller au style du code existant.
-- **Pas de `unwrap()` dans le code de production** hors tests — préférez la gestion d'erreur
-  (`?`, `thiserror`). Le code gère déjà des erreurs typées : respectez ce modèle.
+- **`cargo fmt`**: the official Rust formatting is the reference (no house style).
+- **`cargo clippy -D warnings`**: no warning tolerated. Read Clippy's suggestions.
+- **Documentation**: every module, function, and public struct carries a doc-comment (`///`).
+  Check with `cargo doc --no-deps --open`.
+- **Comments in French** to match the style of the existing code.
+- **No `unwrap()` in production code** outside tests — prefer error handling
+  (`?`, `thiserror`). The code already handles typed errors: respect that model.
 
-## Tester
+## Testing
 
 ```bash
-cargo test                # tests unitaires
+cargo test                # unit tests
 cargo clippy --all-targets -- -D warnings
 ```
 
-- Ajoutez un test pour chaque **correctif de bug** (le test reproduit le bug, échoue sans le fix).
-- Les nouvelles fonctionnalités doivent être couvertes par des tests ou, à défaut,
-  décrites précisément dans la PR pour la revue manuelle.
-- Les tests ne doivent **jamais** accéder au réseau réel ni dépendre du système de fichiers
-  de l'utilisateur (utilisez `std::env::temp_dir()`, comme dans `src/credentials.rs`).
+- Add a test for every **bug fix** (the test reproduces the bug and fails without the fix).
+- New features must be covered by tests or, failing that, precisely
+  described in the PR for manual review.
+- Tests must **never** hit the real network or depend on the user's
+  filesystem (use `std::env::temp_dir()`, as in `src/credentials.rs`).
 
-## Ajouter une fonctionnalité
+## Adding a feature
 
-Pour une **nouvelle fonctionnalité non triviale**, ouvrez d'abord une [issue](https://github.com/ElHoussineDarrazi/SmartExplorer/issues) pour en discuter avant d'écrire le code — cela évite un travail parallèle non aligné.
+For a **non-trivial new feature**, first open an [issue](https://github.com/ElHoussineDarrazi/SmartExplorer/issues) to discuss it before writing code — this avoids parallel, misaligned work.
 
-Idées de contributions bienvenues (cherchez les issues étiquetées `good first issue` ou `help wanted`) :
+Contributions ideas welcome (look for issues labeled `good first issue` or `help wanted`):
 
-- Nouveaux thèmes / personnalisation de l'UI
-- Support de protocoles distants supplémentaires (S3, WebDAV…)
-- Amélioration des performances (rendu des vignettes, indexation)
-- Traductions
-- Tests et documentation
+- New themes / UI customization
+- Support for additional remote protocols (S3, WebDAV…)
+- Performance improvements (thumbnail rendering, indexing)
+- Translations
+- Tests and documentation
 
-Merci encore pour votre contribution !
+Thanks again for your contribution!

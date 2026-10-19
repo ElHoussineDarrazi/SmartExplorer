@@ -1,41 +1,41 @@
-<!-- Merci de contribuer à SmartExplorer ! Remplissez les sections ci-dessous. -->
+<!-- Thanks for contributing to SmartExplorer! Fill in the sections below. -->
 
 ## Description
 
-<!-- Quoi ? Pourquoi ? Décrivez le changement et le besoin qu'il comble. -->
-<!-- Si corre un bug : comment le reproduire. -->
+<!-- What? Why? Describe the change and the need it addresses. -->
+<!-- If fixing a bug: how to reproduce it. -->
 
-Fixes # <!-- numéro d'issue, ex : Fixes #123 -->
+Fixes # <!-- issue number, e.g. Fixes #123 -->
 
-## Type de changement
+## Type of change
 
-<!-- Cochez la case pertinente (x). -->
+<!-- Tick the relevant box (x). -->
 
-- [ ] 🐞 Correction de bug (fix)
-- [ ] ✨ Nouvelle fonctionnalité (feat)
+- [ ] 🐞 Bug fix (fix)
+- [ ] ✨ New feature (feat)
 - [ ] 📝 Documentation (docs)
-- [ ] 🔄 Refactorisation (refactor)
+- [ ] 🔄 Refactoring (refactor)
 - [ ] 🧪 Tests (test)
-- [ ] 🔧 Chore / CI / dépendances (chore)
+- [ ] 🔧 Chore / CI / dependencies (chore)
 
-## Comment tester
+## How to test
 
-<!-- Étapes pour que le relecteur vérifie le changement. -->
+<!-- Steps so the reviewer can verify the change. -->
 
 1.
 2.
 
-## Captures d'écran (si changement d'UI)
+## Screenshots (if UI change)
 
-<!-- Supprimez ce bloc si sans objet. -->
+<!-- Remove this block if not applicable. -->
 
 ## Checklist
 
-<!-- Cochez (x) ce qui s'applique. */
+<!-- Tick (x) what applies. -->
 
-- [ ] `cargo fmt --all -- --check` passe
-- [ ] `cargo clippy --all-targets -- -D warnings` passe sans avertissement
-- [ ] `cargo test` passe
-- [ ] J'ai ajouté/mis à jour la documentation si nécessaire
-- [ ] Mon commit suit les [Conventional Commits](https://www.conventionalcommits.org/) (feat:, fix:…)
-- [ ] J'ai lu et suivi le [CONTRIBUTING.md](https://github.com/ElHoussineDarrazi/SmartExplorer/blob/main/CONTRIBUTING.md)
+- [ ] `cargo fmt --all -- --check` passes
+- [ ] `cargo clippy --all-targets -- -D warnings` passes without warnings
+- [ ] `cargo test` passes
+- [ ] I have added/updated documentation if needed
+- [ ] My commit follows [Conventional Commits](https://www.conventionalcommits.org/) (feat:, fix:…)
+- [ ] I have read and followed [CONTRIBUTING.md](https://github.com/ElHoussineDarrazi/SmartExplorer/blob/main/CONTRIBUTING.md)

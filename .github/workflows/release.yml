@@ -1,23 +1,23 @@
 name: Build and Release
 
-# Déclenché par un tag vX.Y.Z (release) ou manuellement (workflow_dispatch).
+# Triggered by a vX.Y.Z tag (release) or manually (workflow_dispatch).
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
 
-# Nécessaire pour créer la Release GitHub.
+# Required to create the GitHub Release.
 permissions:
   contents: write
 
 jobs:
   # ------------------------------------------------------------------
-  # macOS : app bundle + DMG
-  # NOTE : ni signée avec un Developer ID ni notariée par Apple →
-  # Gatekeeper bloquera le premier lancement (cf. README, section
-  # « Installation macOS »). La signature officielle nécessiterait un
-  # compte Apple Developer payant.
+  # macOS: app bundle + DMG
+  # NOTE: neither signed with a Developer ID nor notarized by Apple →
+  # Gatekeeper will block the first launch (see README, section
+  # "macOS Installation"). Official signing would require a paid
+  # Apple Developer account.
   # ------------------------------------------------------------------
   build-macos:
     name: Build macOS (DMG)
@@ -45,7 +45,7 @@ jobs:
           path: dist/SmartExplorer-macos.dmg
 
   # ------------------------------------------------------------------
-  # Linux : paquet .deb (Ubuntu/Debian)
+  # Linux: .deb package (Ubuntu/Debian)
   # ------------------------------------------------------------------
   build-linux:
     name: Build Linux (.deb)
@@ -68,9 +68,9 @@ jobs:
         run: |
           set -o pipefail
           cargo build --release 2>&1 | tee /tmp/build.log || {
-            # Expose l'erreur dans les annotations publiques du run.
+            # Expose the error in the run's public annotations.
             tail -n 8 /tmp/build.log | sed 's/^/  /' > /tmp/err.txt
-            echo "### ❌ cargo build --release a échoué" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ❌ cargo build --release failed" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"; cat /tmp/build.log | tail -n 60 >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
             while IFS= read -r line; do
               echo "::error title=cargo build (Linux)::${line:0:240}"
@@ -93,7 +93,7 @@ jobs:
           path: dist/*.deb
 
   # ------------------------------------------------------------------
-  # Windows : installateur NSIS (.exe)
+  # Windows: NSIS installer (.exe)
   # ------------------------------------------------------------------
   build-windows:
     name: Build Windows (setup.exe)
@@ -105,11 +105,11 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Prioriser Strawberry Perl (nécessaire à OpenSSL vendored)
+      - name: Prioritize Strawberry Perl (required by vendored OpenSSL)
         shell: pwsh
         run: |
-          # Le perl de Git Bash (sans modules Win32) peut masquer Strawberry
-          # Perl et faire échouer `perl ./Configure` d'openssl-src.
+          # Git Bash's perl (without Win32 modules) can shadow Strawberry
+          # Perl and make openssl-src's `perl ./Configure` fail.
           foreach ($p in @("C:\Strawberry\c\bin", "C:\Strawberry\perl\bin", "C:\Strawberry\perl\site\bin")) {
             if (Test-Path $p) { echo $p | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append }
           }
@@ -118,14 +118,14 @@ jobs:
       - name: Build release
         shell: bash
         env:
-          # openssl-src (ssh2 vendored) doit utiliser Strawberry Perl — le perl
-          # de Git Bash manque des modules requis (Locale::Maketext::Simple…) et
-          # fait échouer `perl ./Configure` (exit 2).
+          # openssl-src (ssh2 vendored) must use Strawberry Perl — Git Bash's
+          # perl lacks required modules (Locale::Maketext::Simple…) and makes
+          # `perl ./Configure` fail (exit 2).
           OPENSSL_SRC_PERL: C:/Strawberry/perl/bin/perl.exe
         run: |
           set -o pipefail
           cargo build --release 2>&1 | tee /tmp/build.log || {
-            echo "### ❌ cargo build --release a échoué" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ❌ cargo build --release failed" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"; tail -n 60 /tmp/build.log >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
             tail -n 8 /tmp/build.log | while IFS= read -r line; do
               echo "::error title=cargo build (Windows)::${line:0:240}"
@@ -141,22 +141,22 @@ jobs:
         shell: pwsh
         run: magick assets/icons/AppIcon.png -background none -alpha remove -resize 256x256 dist_tmp\app.ico
 
-      # NSIS est répertorié sur l'image windows mais absent du PATH et des
-      # chemins standards : on l'installe explicitement via Chocolatey.
-      - name: Installer NSIS (makensis)
+      # NSIS is listed on the Windows image but absent from the PATH and
+      # standard locations: install it explicitly via Chocolatey.
+      - name: Install NSIS (makensis)
         shell: pwsh
         run: choco install nsis -y --no-progress
 
       - name: Package Windows (NSIS setup.exe)
         shell: pwsh
         run: |
-          # Version depuis le tag (vX.Y.Z -> X.Y.Z) ou Cargo.toml
+          # Version from the tag (vX.Y.Z -> X.Y.Z) or Cargo.toml
           $tag = "${{ github.ref_name }}"
           if ($tag -match '^v') { $version = $tag.TrimStart('v') }
           else { $version = (Select-String -Path Cargo.toml -Pattern '^version\s*=\s*"([^"]+)"').Matches.Groups[1].Value }
           Write-Host "Version: $version"
 
-          # makensis (NSIS préinstallé) n'est pas toujours dans le PATH.
+          # makensis (preinstalled NSIS) is not always on the PATH.
           $candidates = @(
             "C:\Program Files (x86)\NSIS\makensis.exe",
             "C:\Program Files\NSIS\makensis.exe"
@@ -165,7 +165,7 @@ jobs:
           if (-not $makensis) {
             $cmd = Get-Command makensis -ErrorAction SilentlyContinue
             if ($cmd) { $makensis = $cmd.Source }
-            else { throw "makensis introuvable (NSIS non installé sur le runner ?)" }
+            else { throw "makensis not found (NSIS not installed on the runner?)" }
           }
           Write-Host "makensis: $makensis"
 
@@ -174,7 +174,7 @@ jobs:
             "/DSOURCE_DIR=$PWD\target\release" `
             "/DOUT_DIR=$PWD\dist_tmp" `
             installer\windows\smartexplorer.nsi
-          if ($LASTEXITCODE -ne 0) { throw "makensis a échoué (code $LASTEXITCODE)" }
+          if ($LASTEXITCODE -ne 0) { throw "makensis failed (exit code $LASTEXITCODE)" }
           Move-Item -Force dist_tmp\SmartExplorer-windows-setup.exe dist\
 
       - name: Upload Windows artifact
@@ -184,8 +184,8 @@ jobs:
           path: dist/SmartExplorer-windows-setup.exe
 
   # ------------------------------------------------------------------
-  # Publication : crée (ou met à jour) la Release GitHub du tag
-  # avec les 3 installateurs.
+  # Publish: create (or update) the tag's GitHub Release
+  # with the 3 installers.
   # ------------------------------------------------------------------
   release:
     name: Create GitHub Release

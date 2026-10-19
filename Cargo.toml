@@ -3,7 +3,7 @@ name = "smart_explorer"
 version = "0.3.1"
 edition = "2024"
 rust-version = "1.85"
-description = "Explorateur de fichiers multiplateforme (Windows, Linux, macOS) en Rust"
+description = "Cross-platform file manager (Windows, Linux, macOS) in Rust"
 license = "MIT"
 repository = "https://github.com/ElHoussineDarrazi/SmartExplorer"
 homepage = "https://github.com/ElHoussineDarrazi/SmartExplorer"
@@ -12,24 +12,24 @@ keywords = ["file-manager", "explorer", "gui", "egui", "cross-platform"]
 categories = ["gui", "filesystem", "command-line-utilities"]
 
 [dependencies]
-# Interface graphique (100% Rust, multiplateforme, sans dépendance système).
+# GUI (100% Rust, cross-platform, no system dependency).
 eframe = "0.36"
 egui = "0.36"
 
-# Corbeille système (Corbeille Windows, Poubelle macOS/Linux).
+# System trash (Windows Recycle Bin, macOS/Linux Trash).
 trash = "5"
 
-# Ouvrir un fichier/dossier avec l'application par défaut de l'OS.
+# Open a file/folder with the OS default application.
 open = "5"
 
-# Répertoires standards (home, bureau, téléchargements…).
+# Standard directories (home, desktop, downloads…).
 dirs = "7"
 
-# Formatage des dates de modification.
+# Modification date formatting.
 chrono = "0.4"
 
-# Décodage / redimensionnement des vignettes d'images (vue Miniatures) :
-# formats courants uniquement, sans les codecs lourds (avif, rayon…).
+# Image thumbnail decoding/resizing (Icons view):
+# common formats only, without heavy codecs (avif, rayon…).
 image = { version = "0.25", default-features = false, features = [
     "png",
     "jpeg",
@@ -40,48 +40,48 @@ image = { version = "0.25", default-features = false, features = [
     "ico",
 ] }
 
-# --- Connexions distantes (SSH/SFTP et FTP) ---
-# ssh2-rs : bindings Rust à libssh2 (SSH + SFTP, auth par mot de passe).
-# Nécessite libssh2 installé sur le système (brew install libssh2, apt install libssh2-1-dev).
+# --- Remote connections (SSH/SFTP and FTP) ---
+# ssh2-rs: Rust bindings to libssh2 (SSH + SFTP, password auth).
+# Requires libssh2 installed on the system (brew install libssh2, apt install libssh2-1-dev).
 ssh2 = "0.9"
 
-# ftp : client FTP pur Rust, synchrone.
+# ftp: pure-Rust, synchronous FTP client.
 ftp = "3"
 
-# Informations système (OS, CPU, GPU, RAM, stockage) pour la fenêtre Propriétés de l'ordinateur.
+# System information (OS, CPU, GPU, RAM, storage) for the Computer Properties window.
 sysinfo = { version = "0.33", features = ["system", "disk"] }
 
-# --- Stockage chiffré des identifiants ---
-# Chiffrement symétrique (XChaCha20-Poly1305) des mots de passe.
+# --- Encrypted credential storage ---
+# Symmetric encryption (XChaCha20-Poly1305) of passwords.
 chacha20poly1305 = "0.11"
-# Dérivation de clé à partir du mot de passe maître (Argon2id).
+# Key derivation from the master password (Argon2id).
 argon2 = "0.5"
-# Génération de sel / nonce.
+# Salt / nonce generation.
 rand = "0.8"
-# Sérialisation de la liste des serveurs distants.
+# Serialization of the remote server list.
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-# Énumérations d'erreur typées.
+# Typed error enums.
 thiserror = "1"
 
-# --- macOS : icônes système réelles (NSWorkspace.iconForFile) ---
-# ATTENTION : cette section doit rester APRÈS toutes les dépendances
-# transversales — en TOML, une section court jusqu'au prochain header, donc
-# toute dépendance placée ici deviendrait exclusive à macOS.
+# --- macOS: real system icons (NSWorkspace.iconForFile) ---
+# WARNING: this section must stay AFTER all cross-platform dependencies —
+# in TOML, a section extends to the next header, so any dependency placed
+# here would become macOS-exclusive.
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 objc2-foundation = "0.3"
 objc2-app-kit = "0.3"
-# Aperçus PDF (vue Miniatures) : première page rendue par PDFKit, natif.
+# PDF previews (Icons view): first page rendered natively by PDFKit.
 objc2-pdf-kit = "0.3"
 
-# --- Windows : ssh2 compilé depuis les sources (pas de libssh2 système requis) ---
+# --- Windows: ssh2 built from source (no system libssh2 required) ---
 [target.'cfg(target_os = "windows")'.dependencies.ssh2]
 version = "0.9"
 default-features = false
 features = ["vendored-openssl"]
 
-# Optimisations du profil release.
+# Release profile optimizations.
 [profile.release]
 opt-level = 2
 lto = true

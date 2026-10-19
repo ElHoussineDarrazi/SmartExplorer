@@ -1,18 +1,18 @@
-name: 🐞 Rapport de bug
-description: Signalez un comportement inattendu ou un plantage
+name: 🐞 Bug report
+description: Report unexpected behavior or a crash
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Merci de signaler un bug ! Remplissez le formulaire ci-dessous pour nous aider à le reproduire.
-        **Pour une faille de sécurité**, n'ouvrez PAS d'issue publique : suivez plutôt [SECURITY.md](https://github.com/ElHoussineDarrazi/SmartExplorer/security/advisories/new).
+        Thanks for reporting a bug! Fill in the form below to help us reproduce it.
+        **For a security flaw**, do NOT open a public issue: instead follow [SECURITY.md](https://github.com/ElHoussineDarrazi/SmartExplorer/security/advisories/new).
 
   - type: input
     id: version
     attributes:
       label: Version
-      description: Version de SmartExplorer (onglet « À propos » ou tag de la Release).
+      description: SmartExplorer version (the "About" tab, or the Release tag).
       placeholder: "0.3.1"
     validations:
       required: true
@@ -20,53 +20,53 @@ body:
   - type: dropdown
     id: os
     attributes:
-      label: Système d'exploitation
+      label: Operating system
       options:
         - macOS (Apple Silicon)
         - macOS (Intel)
         - Windows 10/11
         - Linux (Debian/Ubuntu)
-        - Linux (autre)
+        - Linux (other)
     validations:
       required: true
 
   - type: textarea
     id: what-happened
     attributes:
-      label: Que s'est-il passé ?
-      description: Décrivez le comportement observé, et le comportement attendu.
+      label: What happened?
+      description: Describe the observed behavior, and the expected behavior.
       placeholder: |
-        Quand je…, l'application…
-        Je m'attendais à…
+        When I…, the application…
+        I expected…
     validations:
       required: true
 
   - type: textarea
     id: steps
     attributes:
-      label: Étapes de reproduction
-      description: Les étapes exactes pour reproduire le problème.
+      label: Steps to reproduce
+      description: The exact steps to reproduce the problem.
       placeholder: |
-        1. Ouvrir l'application
-        2. Aller dans…
-        3. Cliquer sur…
-        4. Le bug apparaît
+        1. Open the application
+        2. Go to…
+        3. Click on…
+        4. The bug appears
     validations:
       required: true
 
   - type: textarea
     id: logs
     attributes:
-      label: Messages d'erreur / logs
-      description: Collez tout message d'erreur ou trace pertinente. Facultatif mais très utile.
+      label: Error messages / logs
+      description: Paste any error message or relevant trace. Optional but very useful.
       render: shell
 
   - type: checkboxes
     id: checks
     attributes:
-      label: Vérifications
+      label: Checks
       options:
-        - label: J'ai recherché les issues existantes et ce bug n'est pas déjà signalé.
+        - label: I have searched existing issues and this bug is not already reported.
           required: true
-        - label: Ce bug n'est pas une faille de sécurité (sinon, voir SECURITY.md).
+        - label: This bug is not a security flaw (otherwise, see SECURITY.md).
           required: true

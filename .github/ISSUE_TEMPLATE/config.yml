@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: 🛡️ Sécurité
+  - name: 🛡️ Security
     url: https://github.com/ElHoussineDarrazi/SmartExplorer/security/advisories/new
-    about: Signaler une faille de sécurité (ne pas ouvrir d'issue publique)
-  - name: ❓ Aide & questions
+    about: Report a security flaw (do not open a public issue)
+  - name: ❓ Help & questions
     url: https://github.com/ElHoussineDarrazi/SmartExplorer/discussions
-    about: Poser une question ou obtenir de l'aide (Discussions)
+    about: Ask a question or get help (Discussions)

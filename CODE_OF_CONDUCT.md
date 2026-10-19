@@ -1,38 +1,38 @@
-# Code de conduite du projet
+# Project Code of Conduct
 
-## Notre engagement
+## Our pledge
 
-Nous nous engageons à rendre la participation à ce projet une expérience sans harcèlement pour tous, quel que soit le niveau d'expérience, le genre, l'identité ou l'expression, l'orientation sexuelle, le handicap, l'apparence personnelle, l'âge, la taille, l'origine ethnique, la religion ou la nationalité.
+We are committed to making participation in this project a harassment-free experience for everyone, regardless of experience level, gender, gender identity or expression, sexual orientation, disability, personal appearance, body size, age, ethnicity, religion, or nationality.
 
-## Comportements acceptés
+## Accepted behaviors
 
-- Utiliser un langage accueillant et inclusif
-- Respecter les points de vue et les expériences différentes
-- Accepter la critique constructive et la formuler de manière constructive
-- Se concentrer sur ce qui est le meilleur pour la communauté
+- Use welcoming and inclusive language
+- Respect differing viewpoints and experiences
+- Accept constructive criticism and give it constructively
+- Focus on what is best for the community
 
-## Comportements inacceptables
+## Unacceptable behaviors
 
-- L'utilisation de langage ou d'images sexualisés, et toute attention ou avance sexuelle
-- Le trolling, les insultes ou commentaires désobligeants, et les attaques personnelles ou politiques
-- Le harcèlement public ou privé
-- La publication d'informations privées d'autrui, telles qu'une adresse physique ou un e-mail, sans autorisation explicite
-- Toute autre conducte qui serait raisonnablement considérée comme inappropriée dans un cadre professionnel
+- Sexualized language or imagery, and any unwelcome sexual attention or advances
+- Trolling, insults or derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information, such as a physical address or email, without explicit permission
+- Any other conduct that could reasonably be considered inappropriate in a professional setting
 
-## Responsabilités de mise en œuvre
+## Enforcement responsibilities
 
-Les mainteneurs du projet sont responsables de clarifier les standards de comportement acceptables et sont attendus pour prendre des actions correctives appropriées et équitables en réponse à tout comportement inapproprié.
+Project maintainers are responsible for clarifying the standards of acceptable behavior and are expected to take appropriate and fair corrective action in response to any inappropriate behavior.
 
-Les mainteneurs du projet ont le droit et la responsabilité de supprimer, modifier ou rejeter les commentaires, commits, code, modifications de wiki, issues et autres contributions qui ne sont pas alignés avec ce Code de conduite, et de bannir temporairement ou définitivement tout contributeur pour d'autres comportements qu'ils jugent inappropriés, menaçants, offensants ou nuisibles.
+Project maintainers have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned with this Code of Conduct, and to temporarily or permanently ban any contributor for behaviors they deem inappropriate, threatening, offensive, or harmful.
 
-## Portée
+## Scope
 
-Ce code de conduite s'applique à la fois au sein des espaces du projet et lorsqu'un individu représente le projet ou sa communauté dans des espaces publics.
+This Code of Conduct applies both within project spaces and when an individual represents the project or its community in public spaces.
 
-## Signalement
+## Reporting
 
-Les cas de comportement abusif, harcèlement ou autrement inacceptable peuvent être signalés au mainteneur via [la fonctionnalité d'alerte privée de GitHub](https://github.com/ElHoussineDarrazi/SmartExplorer/security/advisories/new) ou via son profil. Toutes les plaintes seront examinées et traitées de manière juste et expéditive, en préservant la confidentialité du signaleur.
+Cases of abusive, harassing, or otherwise unacceptable behavior may be reported to the maintainer via [GitHub's private reporting feature](https://github.com/ElHoussineDarrazi/SmartExplorer/security/advisories/new) or via their profile. All complaints will be reviewed and handled fairly and promptly, while preserving the reporter's confidentiality.
 
 ## Attribution
 
-Ce Code de conduite est adapté du [Contrat de contributeurs](https://www.contributor-covenant.org), version 2.1, disponible sur [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).
+This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1, available at [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).

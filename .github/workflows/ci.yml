@@ -1,15 +1,15 @@
 name: CI
 
-# Déclenché à chaque push sur main et sur chaque Pull Request.
-# Vérifie la qualité du code (fmt, clippy, tests) et que le projet compile
-# sur les 3 plateformes — sans produire d'installateur (cf. release.yml).
+# Triggered on every push to main and on every Pull Request.
+# Checks code quality (fmt, clippy, tests) and that the project builds
+# on the 3 platforms — without producing an installer (see release.yml).
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
 
-# Lecture seule : ce workflow ne modifie rien.
+# Read-only: this workflow modifies nothing.
 permissions:
   contents: read
 
@@ -19,10 +19,10 @@ env:
 
 jobs:
   # ------------------------------------------------------------------
-  # Qualité du code : formatage, lints stricts, tests unitaires (Linux).
+  # Code quality: formatting, strict lints, unit tests (Linux).
   # ------------------------------------------------------------------
   quality:
-    name: Qualité (fmt + clippy + tests)
+    name: Quality (fmt + clippy + tests)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -50,14 +50,14 @@ jobs:
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
 
-      - name: cargo clippy (warnings = erreurs)
+      - name: cargo clippy (warnings as errors)
         run: cargo clippy --all-targets -- -D warnings
 
       - name: cargo test
         run: cargo test --all-targets
 
   # ------------------------------------------------------------------
-  # Compilation sur les 3 plateformes (sans packaging).
+  # Build on the 3 platforms (without packaging).
   # ------------------------------------------------------------------
   build:
     name: Build (${{ matrix.os }})
@@ -86,8 +86,8 @@ jobs:
       - name: Install system dependencies
         run: ${{ matrix.deps }}
 
-      # Windows : openssl-src (vendored) a besoin d'un Perl complet.
-      - name: Prioriser Strawberry Perl (Windows)
+      # Windows: openssl-src (vendored) needs a full Perl.
+      - name: Prioritize Strawberry Perl (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: echo "C:/Strawberry/perl/bin" >> "$GITHUB_PATH"
@@ -101,5 +101,5 @@ jobs:
             target
           key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build (debug, rapide — compile sans empaqueter)
+      - name: Build (debug, fast — compiles without packaging)
         run: cargo build --all-targets
